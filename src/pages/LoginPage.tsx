@@ -65,7 +65,6 @@ export function LoginPage() {
                   inputMode="tel"
                   placeholder="010 XXXX XXXX"
                 />
-                <span className="border-r border-outline-variant pr-3 text-lg text-on-surface-variant" dir="ltr">+2</span>
               </span>
               {errors.phone && <span className="mt-2 block text-sm font-medium text-error">{errors.phone.message}</span>}
             </label>
