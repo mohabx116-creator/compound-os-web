@@ -1,6 +1,5 @@
 import { delay } from '../../../lib/utils/delay';
 import { complaintApiService } from '../../../lib/api/complaint-service';
-import { DEMO_IDS } from '../../../lib/api/demo-ids';
 import type { Complaint as ApiComplaint } from '../../../lib/api/types';
 import { useAppStore } from '../../../stores/app.store';
 import type { Complaint } from '../../../types/common.types';
@@ -40,9 +39,9 @@ function mapComplaintFromApi(complaint: ApiComplaint): Complaint {
 }
 
 export const complaintService = {
-  async getBackendComplaints(): Promise<Complaint[]> {
+  async getBackendComplaints(residentId: string): Promise<Complaint[]> {
     const complaints = await complaintApiService.getComplaints({
-      residentId: DEMO_IDS.residentId,
+      residentId,
     });
     return complaints.map(mapComplaintFromApi);
   },
@@ -51,9 +50,9 @@ export const complaintService = {
     return mapComplaintFromApi(await complaintApiService.getComplaintById(id));
   },
 
-  async getComplaintsWithMockFallback(): Promise<Complaint[]> {
+  async getComplaintsWithMockFallback(residentId: string): Promise<Complaint[]> {
     try {
-      return await complaintService.getBackendComplaints();
+      return await complaintService.getBackendComplaints(residentId);
     } catch (error) {
       // Temporary Phase 2 bridge: keep non-primary surfaces usable with mock data
       // until real auth/session context and backend error UX are finalized.

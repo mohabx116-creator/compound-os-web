@@ -6,8 +6,8 @@ import { complaintService } from '../features/complaints/services/complaint.serv
 import { paymentService } from '../features/payments/services/payment.service';
 import { profileService } from '../features/profile/services/profile.service';
 import { compoundApiService } from '../lib/api/compound-service';
-import { DEMO_IDS } from '../lib/api/demo-ids';
 import { ROUTES } from '../lib/constants/routes';
+import { useSession } from '../lib/session/use-session';
 import { formatDate } from '../lib/utils/format-date';
 import { formatMoney } from '../lib/utils/format-money';
 import { useAppStore } from '../stores/app.store';
@@ -22,25 +22,26 @@ const quickActions = [
 ];
 
 export function HomePage() {
+  const session = useSession();
   const fallbackResident = useAppStore((state) => state.resident);
   const fallbackUnit = useAppStore((state) => state.unit);
   const { data: payments = [] } = useQuery({ queryKey: ['payments'], queryFn: paymentService.getPayments });
   const { data: complaints = [], isLoading: complaintsLoading, isError: complaintsError } = useQuery({
-    queryKey: ['complaints', 'resident', DEMO_IDS.residentId],
-    queryFn: complaintService.getBackendComplaints,
+    queryKey: ['complaints', 'resident', session.residentId],
+    queryFn: () => complaintService.getBackendComplaints(session.residentId),
   });
   const { data: announcements = [] } = useQuery({ queryKey: ['announcements'], queryFn: announcementService.getAnnouncements });
   const { data: residentData, isLoading: residentLoading, isError: residentError } = useQuery({
-    queryKey: ['profile', DEMO_IDS.residentId],
-    queryFn: profileService.getBackendResidentProfile,
+    queryKey: ['profile', session.residentId],
+    queryFn: () => profileService.getBackendResidentProfile(session.residentId),
   });
   const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
-    queryKey: ['unit', DEMO_IDS.unitId],
-    queryFn: profileService.getBackendUnitDetails,
+    queryKey: ['unit', session.unitId],
+    queryFn: () => profileService.getBackendUnitDetails(session.unitId),
   });
   const { data: compound, isError: compoundError } = useQuery({
-    queryKey: ['compound', DEMO_IDS.compoundId],
-    queryFn: () => compoundApiService.getCompoundById(DEMO_IDS.compoundId),
+    queryKey: ['compound', session.compoundId],
+    queryFn: () => compoundApiService.getCompoundById(session.compoundId),
   });
 
   const resident = residentData ?? fallbackResident;

@@ -4,9 +4,9 @@ import type { LucideIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CoreTopBar } from '../components/layout/CoreTopBar';
 import { profileService } from '../features/profile/services/profile.service';
-import { DEMO_IDS } from '../lib/api/demo-ids';
 import { clearMockAuthentication } from '../lib/auth/mock-auth';
 import { ROUTES } from '../lib/constants/routes';
+import { useSession } from '../lib/session/use-session';
 import { useAppStore } from '../stores/app.store';
 
 const avatarUrl = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=160';
@@ -60,15 +60,16 @@ function ProfileSection({ title, items }: { title: string; items: ProfileItem[] 
 
 export function ProfilePage() {
   const navigate = useNavigate();
+  const session = useSession();
   const fallbackResident = useAppStore((state) => state.resident);
   const fallbackUnit = useAppStore((state) => state.unit);
   const { data: residentData, isLoading: residentLoading, isError: residentError } = useQuery({
-    queryKey: ['profile', DEMO_IDS.residentId],
-    queryFn: profileService.getBackendResidentProfile,
+    queryKey: ['profile', session.residentId],
+    queryFn: () => profileService.getBackendResidentProfile(session.residentId),
   });
   const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
-    queryKey: ['unit', DEMO_IDS.unitId],
-    queryFn: profileService.getBackendUnitDetails,
+    queryKey: ['unit', session.unitId],
+    queryFn: () => profileService.getBackendUnitDetails(session.unitId),
   });
   const resident = residentData ?? fallbackResident;
   const unit = unitData ?? fallbackUnit;

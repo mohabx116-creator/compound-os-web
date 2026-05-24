@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import { CoreTopBar } from '../components/layout/CoreTopBar';
 import { StatusChip } from '../components/ui/StatusChip';
 import { complaintService } from '../features/complaints/services/complaint.service';
-import { DEMO_IDS } from '../lib/api/demo-ids';
 import { ROUTES } from '../lib/constants/routes';
+import { useSession } from '../lib/session/use-session';
 import { formatDate } from '../lib/utils/format-date';
 import type { Complaint } from '../types/common.types';
 
@@ -32,10 +32,11 @@ function complaintStatus(status: Complaint['status']) {
 }
 
 export function ComplaintsPage() {
+  const session = useSession();
   const [filter, setFilter] = useState<(typeof filters)[number]['value']>('ALL');
   const { data: complaints = [], isError, isLoading } = useQuery({
-    queryKey: ['complaints', 'resident', DEMO_IDS.residentId],
-    queryFn: complaintService.getBackendComplaints,
+    queryKey: ['complaints', 'resident', session.residentId],
+    queryFn: () => complaintService.getBackendComplaints(session.residentId),
   });
   const visibleComplaints = filter === 'ALL' ? complaints : complaints.filter((complaint) => complaint.status === filter);
 

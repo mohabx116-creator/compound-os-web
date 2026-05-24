@@ -8,7 +8,7 @@ import { StatusChip } from '../../components/ui/StatusChip';
 import { Timeline } from '../../components/ui/Timeline';
 import { complaintService } from '../../features/complaints/services/complaint.service';
 import { paymentService } from '../../features/payments/services/payment.service';
-import { DEMO_IDS } from '../../lib/api/demo-ids';
+import { useSession } from '../../lib/session/use-session';
 import { formatMoney } from '../../lib/utils/format-money';
 import { complaintStatusLabel, heroImages, PageFrame, paymentStatusLabel, SectionTitle, statusTone } from './shared';
 
@@ -80,10 +80,12 @@ export function PaymentDetailsPage() {
 
 export function ComplaintDetailsPage() {
   const { id } = useParams();
-  const complaintId = id ?? DEMO_IDS.complaintId;
+  const session = useSession();
+  const complaintId = id ?? session.complaintId ?? '';
   const { data: complaint, isLoading, isError } = useQuery({
     queryKey: ['complaints', 'detail', complaintId],
     queryFn: () => complaintService.getBackendComplaintById(complaintId),
+    enabled: Boolean(complaintId),
   });
 
   return (

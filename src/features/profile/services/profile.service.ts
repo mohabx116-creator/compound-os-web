@@ -3,7 +3,6 @@ import { useAppStore } from '../../../stores/app.store';
 import type { Resident, Unit } from '../../../types/common.types';
 import { mockFAQ } from '../../../mocks/services.mock';
 import type { FAQItem } from '../../../mocks/services.mock';
-import { DEMO_IDS } from '../../../lib/api/demo-ids';
 import { residentApiService } from '../../../lib/api/resident-service';
 import { unitApiService } from '../../../lib/api/unit-service';
 import type { Resident as ApiResident, Unit as ApiUnit } from '../../../lib/api/types';
@@ -35,17 +34,17 @@ function mapUnitFromApi(unit: ApiUnit): Unit {
 }
 
 export const profileService = {
-  async getBackendResidentProfile(): Promise<Resident> {
-    return mapResidentFromApi(await residentApiService.getResidentById(DEMO_IDS.residentId));
+  async getBackendResidentProfile(residentId: string): Promise<Resident> {
+    return mapResidentFromApi(await residentApiService.getResidentById(residentId));
   },
 
-  async getBackendUnitDetails(): Promise<Unit> {
-    return mapUnitFromApi(await unitApiService.getUnitById(DEMO_IDS.unitId));
+  async getBackendUnitDetails(unitId: string): Promise<Unit> {
+    return mapUnitFromApi(await unitApiService.getUnitById(unitId));
   },
 
-  async getResidentProfileWithMockFallback(): Promise<Resident> {
+  async getResidentProfileWithMockFallback(residentId: string): Promise<Resident> {
     try {
-      return await profileService.getBackendResidentProfile();
+      return await profileService.getBackendResidentProfile(residentId);
     } catch (error) {
       // Temporary Phase 2 bridge: keep non-primary surfaces usable until real auth/session identity exists.
       console.warn('Falling back to mock resident profile after API read failed.', error);
@@ -54,9 +53,9 @@ export const profileService = {
     }
   },
 
-  async getUnitDetailsWithMockFallback(): Promise<Unit> {
+  async getUnitDetailsWithMockFallback(unitId: string): Promise<Unit> {
     try {
-      return await profileService.getBackendUnitDetails();
+      return await profileService.getBackendUnitDetails(unitId);
     } catch (error) {
       // Temporary Phase 2 bridge: keep non-primary surfaces usable until real auth/session identity exists.
       console.warn('Falling back to mock unit details after API read failed.', error);

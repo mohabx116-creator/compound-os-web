@@ -14,23 +14,24 @@ import { SuccessFeedback } from '../../components/ui/SuccessFeedback';
 import { chatService } from '../../features/chat/services/chat.service';
 import { profileService } from '../../features/profile/services/profile.service';
 import { supportService } from '../../features/profile/services/support.service';
-import { DEMO_IDS } from '../../lib/api/demo-ids';
 import { residentApiService } from '../../lib/api/resident-service';
 import { ROUTES } from '../../lib/constants/routes';
+import { useSession } from '../../lib/session/use-session';
 import { cn } from '../../lib/utils/cn';
 import { formatMoney } from '../../lib/utils/format-money';
 import { useAppStore } from '../../stores/app.store';
 import { fieldClass, heroImages, IconBubble, PageFrame, SectionTitle } from './shared';
 
 export function UnitDetailsPage() {
+  const session = useSession();
   const fallbackUnit = useAppStore((state) => state.unit);
   const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
-    queryKey: ['unit', DEMO_IDS.unitId],
-    queryFn: profileService.getBackendUnitDetails,
+    queryKey: ['unit', session.unitId],
+    queryFn: () => profileService.getBackendUnitDetails(session.unitId),
   });
   const { data: residents = [], isLoading: residentsLoading, isError: residentsError } = useQuery({
-    queryKey: ['residents', 'unit', DEMO_IDS.unitId],
-    queryFn: () => residentApiService.getResidents({ unitId: DEMO_IDS.unitId }),
+    queryKey: ['residents', 'unit', session.unitId],
+    queryFn: () => residentApiService.getResidents({ unitId: session.unitId }),
   });
   const unit = unitData ?? fallbackUnit;
   const ownerName = residents[0]?.fullName ?? 'أحمد المحمدي';
