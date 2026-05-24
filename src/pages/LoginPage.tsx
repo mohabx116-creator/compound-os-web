@@ -63,9 +63,9 @@ export function LoginPage() {
                   className="min-w-0 flex-1 border-none bg-transparent px-3 text-left text-lg text-on-surface outline-none ring-0 placeholder:text-outline-variant focus:ring-0"
                   dir="ltr"
                   inputMode="tel"
-                  placeholder="5X XXX XXXX"
+                  placeholder="010 XXXX XXXX"
                 />
-                <span className="border-r border-outline-variant pr-3 text-lg text-on-surface-variant">+966</span>
+                <span className="border-r border-outline-variant pr-3 text-lg text-on-surface-variant" dir="ltr">+2</span>
               </span>
               {errors.phone && <span className="mt-2 block text-sm font-medium text-error">{errors.phone.message}</span>}
             </label>
