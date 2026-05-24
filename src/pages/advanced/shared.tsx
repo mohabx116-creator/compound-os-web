@@ -47,16 +47,17 @@ export function statusTone(status?: string) {
 }
 
 export function paymentStatusLabel(status?: string) {
-  if (status === 'PAID') return '?????';
-  if (status === 'OVERDUE') return '?????';
-  return '??? ????????';
+  if (status === 'PAID') return 'مدفوع';
+  if (status === 'OVERDUE') return 'متأخر';
+  return 'قيد السداد';
 }
 
 export function complaintStatusLabel(status?: string) {
-  if (status === 'RESOLVED') return '?? ????';
-  if (status === 'IN_PROGRESS') return '??? ???????';
-  if (status === 'ESCALATED') return '????';
-  return '??????';
+  if (status === 'RESOLVED') return 'تم الحل';
+  if (status === 'IN_PROGRESS') return 'قيد التنفيذ';
+  if (status === 'ESCALATED') return 'مصعدة';
+  if (status === 'CLOSED') return 'مغلقة';
+  return 'مفتوحة';
 }
 
 export const fieldClass =

@@ -1,19 +1,81 @@
 import { delay } from '../../../lib/utils/delay';
+import { complaintApiService } from '../../../lib/api/complaint-service';
+import { DEMO_IDS } from '../../../lib/api/demo-ids';
+import type { Complaint as ApiComplaint } from '../../../lib/api/types';
 import { useAppStore } from '../../../stores/app.store';
 import type { Complaint } from '../../../types/common.types';
 
+function complaintCategory(complaint: ApiComplaint) {
+  return complaint.unit?.unitNumber ?? complaint.compound?.name ?? 'Complaint';
+}
+
+function mapComplaintFromApi(complaint: ApiComplaint): Complaint {
+  return {
+    id: complaint.id,
+    title: complaint.title,
+    description: complaint.description,
+    priority: complaint.priority,
+    status: complaint.status,
+    createdAt: complaint.createdAt,
+    updatedAt: complaint.updatedAt,
+    residentId: complaint.residentId,
+    category: complaintCategory(complaint),
+    timeline: [
+      {
+        status: 'OPEN',
+        note: complaint.description,
+        date: complaint.createdAt,
+      },
+      ...(complaint.status !== 'OPEN'
+        ? [
+            {
+              status: complaint.status,
+              note: complaint.status === 'CLOSED' ? 'Complaint closed.' : 'Complaint status updated.',
+              date: complaint.updatedAt,
+            },
+          ]
+        : []),
+    ],
+  };
+}
+
 export const complaintService = {
-  async getComplaints(): Promise<Complaint[]> {
-    await delay(300);
-    return useAppStore.getState().complaints;
+  async getBackendComplaints(): Promise<Complaint[]> {
+    const complaints = await complaintApiService.getComplaints({
+      residentId: DEMO_IDS.residentId,
+    });
+    return complaints.map(mapComplaintFromApi);
   },
 
-  async getComplaintById(id: string): Promise<Complaint | undefined> {
-    await delay(300);
-    return useAppStore.getState().complaints.find((c) => c.id === id);
+  async getBackendComplaintById(id: string): Promise<Complaint> {
+    return mapComplaintFromApi(await complaintApiService.getComplaintById(id));
+  },
+
+  async getComplaintsWithMockFallback(): Promise<Complaint[]> {
+    try {
+      return await complaintService.getBackendComplaints();
+    } catch (error) {
+      // Temporary Phase 2 bridge: keep non-primary surfaces usable with mock data
+      // until real auth/session context and backend error UX are finalized.
+      console.warn('Falling back to mock complaints after API read failed.', error);
+      await delay(300);
+      return useAppStore.getState().complaints;
+    }
+  },
+
+  async getComplaintByIdWithMockFallback(id: string): Promise<Complaint | undefined> {
+    try {
+      return await complaintService.getBackendComplaintById(id);
+    } catch (error) {
+      // Temporary Phase 2 bridge: non-primary detail surfaces retain mock fallback during read-only integration.
+      console.warn('Falling back to mock complaint detail after API read failed.', error);
+      await delay(300);
+      return useAppStore.getState().complaints.find((c) => c.id === id);
+    }
   },
 
   async createComplaint(data: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt' | 'residentId' | 'timeline'>): Promise<Complaint> {
+    // Mock-only until a later phase explicitly wires complaint mutations to the backend.
     await delay(500);
     return useAppStore.getState().addComplaint(data);
   },

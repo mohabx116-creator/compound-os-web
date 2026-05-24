@@ -14,18 +14,36 @@ import { SuccessFeedback } from '../../components/ui/SuccessFeedback';
 import { chatService } from '../../features/chat/services/chat.service';
 import { profileService } from '../../features/profile/services/profile.service';
 import { supportService } from '../../features/profile/services/support.service';
+import { DEMO_IDS } from '../../lib/api/demo-ids';
+import { residentApiService } from '../../lib/api/resident-service';
 import { ROUTES } from '../../lib/constants/routes';
 import { cn } from '../../lib/utils/cn';
 import { formatMoney } from '../../lib/utils/format-money';
+import { useAppStore } from '../../stores/app.store';
 import { fieldClass, heroImages, IconBubble, PageFrame, SectionTitle } from './shared';
 
 export function UnitDetailsPage() {
-  const { data: unit } = useQuery({ queryKey: ['unit'], queryFn: profileService.getUnitDetails });
+  const fallbackUnit = useAppStore((state) => state.unit);
+  const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
+    queryKey: ['unit', DEMO_IDS.unitId],
+    queryFn: profileService.getBackendUnitDetails,
+  });
+  const { data: residents = [], isLoading: residentsLoading, isError: residentsError } = useQuery({
+    queryKey: ['residents', 'unit', DEMO_IDS.unitId],
+    queryFn: () => residentApiService.getResidents({ unitId: DEMO_IDS.unitId }),
+  });
+  const unit = unitData ?? fallbackUnit;
+  const ownerName = residents[0]?.fullName ?? 'أحمد المحمدي';
 
   return (
     <PageFrame>
       <CoreTopBar title="بيانات وحدتي" subtitle={unit ? `${unit.unitType} ${unit.unitNumber}` : undefined} back />
       <main className="space-y-5 px-5 pt-6">
+        {(unitError || residentsError) && (
+          <DetailCard>
+            <p className="text-right text-sm text-error">تعذر تحميل بعض بيانات الوحدة من الخادم. يتم عرض البيانات المتاحة مؤقتا.</p>
+          </DetailCard>
+        )}
         <div className="rounded-[30px] bg-primary p-6 text-white shadow-xl shadow-primary/15">
           <p className="text-primary-fixed-dim">رصيد الصيانة الحالي</p>
           <p className="mt-3 text-5xl font-bold">{formatMoney(2500)}</p>
@@ -35,7 +53,7 @@ export function UnitDetailsPage() {
           <DetailCard className="text-center">
             <User className="mx-auto h-7 w-7 text-secondary" />
             <p className="mt-2 text-sm text-on-surface-variant">المالك</p>
-            <p className="font-bold text-primary">أحمد المحمدي</p>
+            <p className="font-bold text-primary">{ownerName}</p>
           </DetailCard>
           <DetailCard className="text-center">
             <Building2 className="mx-auto h-7 w-7 text-secondary" />
@@ -59,10 +77,16 @@ export function UnitDetailsPage() {
         <DetailCard>
           <SectionTitle title="السكان المسجلون" icon={Users} />
           <div className="mt-4 space-y-3">
-            {['أحمد المحمدي', 'سارة أحمد', 'ليلى أحمد'].map((name) => (
-              <div key={name} className="flex items-center justify-between rounded-2xl bg-surface-container-low p-3">
-                <StatusChip label="نشط" tone="success" />
-                <span className="font-bold text-primary">{name}</span>
+            {(unitLoading || residentsLoading) && (
+              <p className="rounded-2xl bg-surface-container-low p-3 text-center text-sm font-bold text-secondary">جاري تحميل بيانات الوحدة...</p>
+            )}
+            {!residentsLoading && !residentsError && residents.length === 0 && (
+              <p className="rounded-2xl bg-surface-container-low p-3 text-center text-sm text-on-surface-variant">لا يوجد سكان مسجلون لهذه الوحدة حاليا.</p>
+            )}
+            {residents.map((resident) => (
+              <div key={resident.id} className="flex items-center justify-between rounded-2xl bg-surface-container-low p-3">
+                <StatusChip label={resident.status === 'ACTIVE' ? 'نشط' : 'غير نشط'} tone={resident.status === 'ACTIVE' ? 'success' : 'neutral'} />
+                <span className="font-bold text-primary">{resident.fullName}</span>
               </div>
             ))}
           </div>

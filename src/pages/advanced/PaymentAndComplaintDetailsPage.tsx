@@ -8,6 +8,7 @@ import { StatusChip } from '../../components/ui/StatusChip';
 import { Timeline } from '../../components/ui/Timeline';
 import { complaintService } from '../../features/complaints/services/complaint.service';
 import { paymentService } from '../../features/payments/services/payment.service';
+import { DEMO_IDS } from '../../lib/api/demo-ids';
 import { formatMoney } from '../../lib/utils/format-money';
 import { complaintStatusLabel, heroImages, PageFrame, paymentStatusLabel, SectionTitle, statusTone } from './shared';
 
@@ -79,13 +80,33 @@ export function PaymentDetailsPage() {
 
 export function ComplaintDetailsPage() {
   const { id } = useParams();
-  const { data: complaints = [] } = useQuery({ queryKey: ['complaints'], queryFn: complaintService.getComplaints });
-  const complaint = complaints.find((item) => item.id === id) ?? complaints[0];
+  const complaintId = id ?? DEMO_IDS.complaintId;
+  const { data: complaint, isLoading, isError } = useQuery({
+    queryKey: ['complaints', 'detail', complaintId],
+    queryFn: () => complaintService.getBackendComplaintById(complaintId),
+  });
 
   return (
     <PageFrame>
       <CoreTopBar title="تفاصيل الشكوى" back />
       <main className="space-y-5 px-5 pt-6">
+        {isLoading && (
+          <DetailCard>
+            <p className="text-center text-sm font-bold text-secondary">جاري تحميل تفاصيل الشكوى...</p>
+          </DetailCard>
+        )}
+        {isError && (
+          <DetailCard>
+            <p className="text-right text-sm text-error">تعذر تحميل تفاصيل الشكوى من الخادم.</p>
+          </DetailCard>
+        )}
+        {!isLoading && !isError && !complaint && (
+          <DetailCard>
+            <p className="text-center text-sm text-on-surface-variant">لا توجد تفاصيل شكوى متاحة لهذا البلاغ.</p>
+          </DetailCard>
+        )}
+        {complaint && (
+          <>
         <DetailCard className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex gap-2">
@@ -130,6 +151,8 @@ export function ComplaintDetailsPage() {
             ))}
           </div>
         </DetailCard>
+          </>
+        )}
       </main>
     </PageFrame>
   );

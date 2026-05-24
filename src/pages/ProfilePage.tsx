@@ -4,8 +4,10 @@ import type { LucideIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CoreTopBar } from '../components/layout/CoreTopBar';
 import { profileService } from '../features/profile/services/profile.service';
+import { DEMO_IDS } from '../lib/api/demo-ids';
 import { clearMockAuthentication } from '../lib/auth/mock-auth';
 import { ROUTES } from '../lib/constants/routes';
+import { useAppStore } from '../stores/app.store';
 
 const avatarUrl = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=160';
 
@@ -58,8 +60,18 @@ function ProfileSection({ title, items }: { title: string; items: ProfileItem[] 
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { data: resident } = useQuery({ queryKey: ['profile'], queryFn: profileService.getResidentProfile });
-  const { data: unit } = useQuery({ queryKey: ['unit'], queryFn: profileService.getUnitDetails });
+  const fallbackResident = useAppStore((state) => state.resident);
+  const fallbackUnit = useAppStore((state) => state.unit);
+  const { data: residentData, isLoading: residentLoading, isError: residentError } = useQuery({
+    queryKey: ['profile', DEMO_IDS.residentId],
+    queryFn: profileService.getBackendResidentProfile,
+  });
+  const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
+    queryKey: ['unit', DEMO_IDS.unitId],
+    queryFn: profileService.getBackendUnitDetails,
+  });
+  const resident = residentData ?? fallbackResident;
+  const unit = unitData ?? fallbackUnit;
 
   function handleLogout() {
     clearMockAuthentication();
@@ -70,6 +82,16 @@ export function ProfilePage() {
     <section className="min-h-dvh bg-background pb-28">
       <CoreTopBar title="حسابي" />
       <main className="space-y-8 px-5 pt-8">
+        {(residentLoading || unitLoading) && (
+          <div className="rounded-2xl border border-outline-variant/50 bg-white px-4 py-3 text-right text-sm font-bold text-secondary shadow-sm">
+            جاري تحديث بيانات الحساب...
+          </div>
+        )}
+        {(residentError || unitError) && (
+          <div className="rounded-2xl border border-error/20 bg-error-container/40 px-4 py-3 text-right text-sm text-error shadow-sm">
+            تعذر تحميل بيانات الحساب من الخادم. يتم عرض البيانات المحفوظة مؤقتا.
+          </div>
+        )}
         <Link className="flex items-center gap-5 rounded-[28px] border border-outline-variant bg-white p-6 shadow-xl shadow-primary/10" to={ROUTES.UNIT}>
           <div className="relative shrink-0">
             <img alt="" className="h-20 w-20 rounded-full border-4 border-secondary object-cover" src={avatarUrl} />
@@ -79,7 +101,7 @@ export function ProfilePage() {
           </div>
           <div className="min-w-0 flex-1 text-right">
             <h1 className="truncate text-xl font-semibold text-primary">{resident?.fullName ?? 'أحمد المحمدي'}</h1>
-            <p className="mt-1 text-lg text-on-surface">{unit?.unitNumber ?? 'فيلا ٢٤'} - الياسمين</p>
+            <p className="mt-1 text-lg text-on-surface">{unit?.unitNumber ?? 'فيلا ٢٤'} - {unit?.compoundName ?? 'الياسمين'}</p>
             <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-secondary-container/40 px-4 py-2 text-sm font-bold text-on-secondary-container">
               <ShieldCheck className="h-4 w-4" />
               مالك الوحدة

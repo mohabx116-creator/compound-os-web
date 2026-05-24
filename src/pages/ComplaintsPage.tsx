@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { CoreTopBar } from '../components/layout/CoreTopBar';
 import { StatusChip } from '../components/ui/StatusChip';
 import { complaintService } from '../features/complaints/services/complaint.service';
+import { DEMO_IDS } from '../lib/api/demo-ids';
 import { ROUTES } from '../lib/constants/routes';
 import { formatDate } from '../lib/utils/format-date';
 import type { Complaint } from '../types/common.types';
@@ -32,7 +33,10 @@ function complaintStatus(status: Complaint['status']) {
 
 export function ComplaintsPage() {
   const [filter, setFilter] = useState<(typeof filters)[number]['value']>('ALL');
-  const { data: complaints = [] } = useQuery({ queryKey: ['complaints'], queryFn: complaintService.getComplaints });
+  const { data: complaints = [], isError, isLoading } = useQuery({
+    queryKey: ['complaints', 'resident', DEMO_IDS.residentId],
+    queryFn: complaintService.getBackendComplaints,
+  });
   const visibleComplaints = filter === 'ALL' ? complaints : complaints.filter((complaint) => complaint.status === filter);
 
   return (
@@ -55,6 +59,21 @@ export function ComplaintsPage() {
         </div>
 
         <div className="space-y-5">
+          {isLoading && (
+            <div className="rounded-[28px] bg-white p-6 text-center text-base font-bold text-secondary shadow-lg shadow-primary/5">
+              جاري تحميل الشكاوى...
+            </div>
+          )}
+          {isError && (
+            <div className="rounded-[28px] border border-error/20 bg-error-container/40 p-6 text-right text-error">
+              تعذر تحميل الشكاوى من الخادم. حاول مرة أخرى لاحقا.
+            </div>
+          )}
+          {!isLoading && !isError && visibleComplaints.length === 0 && (
+            <div className="rounded-[28px] bg-white p-6 text-center text-on-surface-variant shadow-lg shadow-primary/5">
+              لا توجد شكاوى مطابقة لهذا الفلتر.
+            </div>
+          )}
           {visibleComplaints.map((complaint) => (
             <Link key={complaint.id} className="block rounded-[28px] bg-white p-6 shadow-xl shadow-primary/8 transition-transform active:scale-[0.99]" to={`/complaints/${complaint.id}`}>
               <div className="flex items-start justify-between gap-4">

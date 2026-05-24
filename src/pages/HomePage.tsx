@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import { announcementService } from '../features/announcements/services/announcement.service';
 import { complaintService } from '../features/complaints/services/complaint.service';
 import { paymentService } from '../features/payments/services/payment.service';
+import { profileService } from '../features/profile/services/profile.service';
+import { compoundApiService } from '../lib/api/compound-service';
+import { DEMO_IDS } from '../lib/api/demo-ids';
 import { ROUTES } from '../lib/constants/routes';
 import { formatDate } from '../lib/utils/format-date';
 import { formatMoney } from '../lib/utils/format-money';
@@ -19,13 +22,31 @@ const quickActions = [
 ];
 
 export function HomePage() {
-  const resident = useAppStore((state) => state.resident);
-  const unit = useAppStore((state) => state.unit);
+  const fallbackResident = useAppStore((state) => state.resident);
+  const fallbackUnit = useAppStore((state) => state.unit);
   const { data: payments = [] } = useQuery({ queryKey: ['payments'], queryFn: paymentService.getPayments });
-  const { data: complaints = [] } = useQuery({ queryKey: ['complaints'], queryFn: complaintService.getComplaints });
+  const { data: complaints = [], isLoading: complaintsLoading, isError: complaintsError } = useQuery({
+    queryKey: ['complaints', 'resident', DEMO_IDS.residentId],
+    queryFn: complaintService.getBackendComplaints,
+  });
   const { data: announcements = [] } = useQuery({ queryKey: ['announcements'], queryFn: announcementService.getAnnouncements });
+  const { data: residentData, isLoading: residentLoading, isError: residentError } = useQuery({
+    queryKey: ['profile', DEMO_IDS.residentId],
+    queryFn: profileService.getBackendResidentProfile,
+  });
+  const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
+    queryKey: ['unit', DEMO_IDS.unitId],
+    queryFn: profileService.getBackendUnitDetails,
+  });
+  const { data: compound, isError: compoundError } = useQuery({
+    queryKey: ['compound', DEMO_IDS.compoundId],
+    queryFn: () => compoundApiService.getCompoundById(DEMO_IDS.compoundId),
+  });
 
+  const resident = residentData ?? fallbackResident;
+  const unit = unitData ?? fallbackUnit;
   const firstName = resident.fullName.split(' ')[0] ?? resident.fullName;
+  const compoundName = compound?.name ?? unit.compoundName;
   const outstanding = payments.filter((payment) => payment.status !== 'PAID');
   const totalDue = outstanding.reduce((sum, payment) => sum + payment.amount, 0);
   const nextDueDate = outstanding[0]?.dueDate;
@@ -40,7 +61,7 @@ export function HomePage() {
           <img alt="" className="h-12 w-12 rounded-full border-2 border-primary/10 object-cover" src={avatarUrl} />
           <div>
             <h1 className="text-2xl font-semibold leading-8 text-primary">أهلا بك، {firstName}</h1>
-            <p className="text-base text-on-surface-variant">{unit.unitNumber} - الياسمين</p>
+            <p className="text-base text-on-surface-variant">{unit.unitNumber} - {compoundName}</p>
           </div>
         </div>
         <Link aria-label="الإشعارات" className="flex h-12 w-12 items-center justify-center rounded-full text-primary hover:bg-surface-container" to={ROUTES.NOTIFICATIONS}>
@@ -49,6 +70,21 @@ export function HomePage() {
       </header>
 
       <main className="space-y-6 px-5 pt-6">
+        {(residentLoading || unitLoading || complaintsLoading) && (
+          <div className="rounded-2xl border border-outline-variant/50 bg-white px-4 py-3 text-right text-sm font-bold text-secondary shadow-sm">
+            جاري تحديث بيانات المجمع...
+          </div>
+        )}
+        {(residentError || unitError || complaintsError) && (
+          <div className="rounded-2xl border border-error/20 bg-error-container/40 px-4 py-3 text-right text-sm text-error shadow-sm">
+            تعذر تحديث بعض بيانات السكن من الخادم. يتم عرض البيانات المتاحة مؤقتا.
+          </div>
+        )}
+        {compoundError && (
+          <div className="rounded-2xl border border-outline-variant/50 bg-white px-4 py-3 text-right text-sm text-on-surface-variant shadow-sm">
+            يتم عرض بيانات محفوظة مؤقتا لحين توفر ملخص المجمع.
+          </div>
+        )}
         <Link className="relative block overflow-hidden rounded-[28px] bg-primary-container p-6 text-white shadow-xl shadow-primary/15" to={ROUTES.PAYMENTS}>
           <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-secondary/10 blur-3xl" />
           <div className="relative z-10 space-y-5">
@@ -77,14 +113,14 @@ export function HomePage() {
               <TriangleAlert className="h-7 w-7" />
             </div>
             <p className="text-xl text-on-surface">شكاوى مفتوحة</p>
-            <p className="mt-1 text-2xl font-semibold text-on-surface">{openComplaints || 1}</p>
+            <p className="mt-1 text-2xl font-semibold text-on-surface">{openComplaints}</p>
           </Link>
           <Link className="rounded-[28px] border border-outline-variant/40 bg-white p-5 shadow-lg shadow-primary/5" to={ROUTES.COMPLAINTS}>
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-tertiary-fixed/35 text-tertiary">
               <CalendarClock className="h-7 w-7" />
             </div>
             <p className="text-xl text-on-surface">تحت التنفيذ</p>
-            <p className="mt-1 text-2xl font-semibold text-on-surface">{inProgressComplaints || 2}</p>
+            <p className="mt-1 text-2xl font-semibold text-on-surface">{inProgressComplaints}</p>
           </Link>
         </div>
 
