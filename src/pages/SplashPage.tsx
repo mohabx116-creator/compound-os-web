@@ -1,9 +1,12 @@
-import { ShieldCheck } from 'lucide-react';
+import { LogIn, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppLogo } from '../components/brand/AppLogo';
+import { isMockAuthenticated } from '../lib/auth/mock-auth';
 import { ROUTES } from '../lib/constants/routes';
 
 export function SplashPage() {
+  const isAuthenticated = isMockAuthenticated();
+
   return (
     <section className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 text-center">
       <div className="absolute inset-0 bg-[radial-gradient(#e0e3e5_0.6px,transparent_0.6px)] [background-size:24px_24px]" />
@@ -24,6 +27,21 @@ export function SplashPage() {
           <div className="h-full w-full origin-right rounded-full bg-gradient-to-l from-secondary to-primary animate-[splash-load_2200ms_ease-in-out_forwards]" />
         </div>
       </Link>
+
+      <div className="relative z-10 mt-8 flex w-full max-w-xs flex-col gap-3">
+        <Link
+          className="inline-flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-lg font-bold text-white shadow-xl shadow-primary/20 transition-transform active:scale-[0.98]"
+          to={ROUTES.LOGIN}
+        >
+          الدخول إلى التجربة
+          <LogIn className="h-5 w-5" aria-hidden="true" />
+        </Link>
+        {isAuthenticated && (
+          <Link className="text-sm font-bold text-secondary" to={ROUTES.HOME}>
+            الانتقال إلى لوحة التحكم
+          </Link>
+        )}
+      </div>
     </section>
   );
 }

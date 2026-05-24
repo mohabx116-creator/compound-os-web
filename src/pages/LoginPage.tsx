@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { AppLogo } from '../components/brand/AppLogo';
 import { SuccessFeedback } from '../components/ui/SuccessFeedback';
+import { setMockAuthenticated } from '../lib/auth/mock-auth';
 import { ROUTES } from '../lib/constants/routes';
 
 const loginSchema = z.object({
@@ -32,6 +33,7 @@ export function LoginPage() {
   });
 
   const onSubmit = handleSubmit(async () => {
+    setMockAuthenticated();
     setSubmitted(true);
     window.setTimeout(() => navigate(ROUTES.HOME), 450);
   });

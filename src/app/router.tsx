@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { MobileAppShell } from '../components/layout/MobileAppShell';
 import { ROUTES } from '../lib/constants/routes';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
+import { ProtectedRoute } from './route-guards';
 import { routeMeta } from './route-meta';
 
 const SplashPage = lazy(() => import('../pages/SplashPage').then((module) => ({ default: module.SplashPage })));
@@ -90,6 +91,7 @@ export function AppRouter() {
         <Route element={<MobileAppShell />}>
           <Route path={ROUTES.SPLASH} element={<Suspense fallback={<RouteLoadingFallback />}><SplashPage /></Suspense>} />
           <Route path={ROUTES.LOGIN} element={<Suspense fallback={<RouteLoadingFallback />}><LoginPage /></Suspense>} />
+          <Route element={<ProtectedRoute />}>
           <Route path={ROUTES.HOME} element={<Suspense fallback={<RouteLoadingFallback />}><HomePage /></Suspense>} />
           <Route path={ROUTES.PAYMENTS} element={<Suspense fallback={<RouteLoadingFallback />}><PaymentsPage /></Suspense>} />
           <Route path={ROUTES.PAYMENT_DETAILS} element={<Suspense fallback={<RouteLoadingFallback />}><PaymentDetailsPage /></Suspense>} />
@@ -121,6 +123,7 @@ export function AppRouter() {
               element={<PlaceholderPage title={route.title} purpose={route.purpose} />}
             />
           ))}
+          </Route>
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Route>
       </Routes>

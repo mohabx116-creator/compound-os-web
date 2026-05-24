@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Bell, ChevronLeft, CircleHelp, DoorOpen, Edit3, FileText, Globe2, LockKeyhole, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CoreTopBar } from '../components/layout/CoreTopBar';
 import { profileService } from '../features/profile/services/profile.service';
+import { clearMockAuthentication } from '../lib/auth/mock-auth';
 import { ROUTES } from '../lib/constants/routes';
 
 const avatarUrl = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=160';
@@ -56,8 +57,14 @@ function ProfileSection({ title, items }: { title: string; items: ProfileItem[] 
 }
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const { data: resident } = useQuery({ queryKey: ['profile'], queryFn: profileService.getResidentProfile });
   const { data: unit } = useQuery({ queryKey: ['unit'], queryFn: profileService.getUnitDetails });
+
+  function handleLogout() {
+    clearMockAuthentication();
+    navigate(ROUTES.LOGIN, { replace: true });
+  }
 
   return (
     <section className="min-h-dvh bg-background pb-28">
@@ -84,10 +91,10 @@ export function ProfilePage() {
         <ProfileSection title="الإعدادات" items={settingItems} />
         <ProfileSection title="الدعم" items={supportItems} />
 
-        <Link className="flex items-center justify-center gap-3 rounded-3xl bg-error-container px-6 py-5 text-xl font-bold text-error" to={ROUTES.LOGIN}>
+        <button className="flex w-full items-center justify-center gap-3 rounded-3xl bg-error-container px-6 py-5 text-xl font-bold text-error" type="button" onClick={handleLogout}>
           <DoorOpen className="h-6 w-6" />
           تسجيل الخروج
-        </Link>
+        </button>
       </main>
     </section>
   );
