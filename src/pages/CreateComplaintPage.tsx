@@ -40,6 +40,7 @@ export function CreateComplaintPage() {
       setSubmitted(true);
       await queryClient.invalidateQueries({
         queryKey: ['complaints', 'resident', session.residentId],
+        exact: true,
       });
     },
   });
