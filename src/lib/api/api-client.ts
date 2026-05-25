@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAccessToken } from '../auth/auth-token-provider';
 import type { ApiResponse, PaginatedMeta } from './types';
 
 const DEFAULT_API_BASE_URL = 'https://compound-os-api.onrender.com/api/v1';
@@ -31,6 +32,16 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+apiClient.interceptors.request.use((config) => {
+  const accessToken = getAccessToken()?.trim();
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
 });
 
 function cleanParams(params?: object) {
