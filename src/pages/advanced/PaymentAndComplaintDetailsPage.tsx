@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Clock3, Download, FileCheck, FileText, History, Info, Star } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { CoreTopBar } from '../../components/layout/CoreTopBar';
 import { DetailCard } from '../../components/ui/DetailCard';
 import { InfoRow } from '../../components/ui/InfoRow';
@@ -8,9 +8,83 @@ import { StatusChip } from '../../components/ui/StatusChip';
 import { Timeline } from '../../components/ui/Timeline';
 import { complaintService } from '../../features/complaints/services/complaint.service';
 import { paymentService } from '../../features/payments/services/payment.service';
+import { ApiClientError } from '../../lib/api/api-client';
+import { ROUTES } from '../../lib/constants/routes';
 import { useSession } from '../../lib/session/use-session';
 import { formatMoney } from '../../lib/utils/format-money';
 import { complaintStatusLabel, heroImages, PageFrame, paymentStatusLabel, SectionTitle, statusTone } from './shared';
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+type ComplaintDetailErrorKind = 'invalid-id' | 'not-found' | 'load-failed';
+
+function isUuidLike(value: string) {
+  return uuidPattern.test(value);
+}
+
+function getComplaintDetailErrorKind(error: unknown): ComplaintDetailErrorKind {
+  if (error instanceof ApiClientError) {
+    if (error.status === 404) return 'not-found';
+    if (error.status === 400) return 'invalid-id';
+  }
+
+  return 'load-failed';
+}
+
+function getComplaintDetailErrorCopy(kind: ComplaintDetailErrorKind) {
+  if (kind === 'invalid-id') {
+    return {
+      title: 'رقم الشكوى غير صالح',
+      description: 'تأكد من الرابط أو ارجع إلى قائمة الشكاوى.',
+    };
+  }
+
+  if (kind === 'not-found') {
+    return {
+      title: 'الشكوى غير موجودة',
+      description: 'ربما تم حذفها أو أن الرابط غير صحيح.',
+    };
+  }
+
+  return {
+    title: 'تعذر تحميل تفاصيل الشكوى',
+    description: 'حاول مرة أخرى بعد لحظات.',
+  };
+}
+
+interface ComplaintDetailErrorCardProps {
+  kind: ComplaintDetailErrorKind;
+  isRetrying?: boolean;
+  onRetry?: () => void;
+}
+
+function ComplaintDetailErrorCard({ kind, isRetrying = false, onRetry }: ComplaintDetailErrorCardProps) {
+  const copy = getComplaintDetailErrorCopy(kind);
+
+  return (
+    <DetailCard className="space-y-4 text-right">
+      <div>
+        <h1 className="text-xl font-bold text-error">{copy.title}</h1>
+        <p className="mt-2 text-sm leading-6 text-on-surface-variant">{copy.description}</p>
+      </div>
+      <div className="flex flex-col gap-3 sm:flex-row-reverse">
+        <Link className="inline-flex justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/15" to={ROUTES.COMPLAINTS}>
+          العودة إلى قائمة الشكاوى
+        </Link>
+        {onRetry && (
+          <button
+            className="inline-flex justify-center rounded-2xl border border-outline-variant px-5 py-3 text-sm font-bold text-primary disabled:opacity-60"
+            disabled={isRetrying}
+            type="button"
+            onClick={onRetry}
+          >
+            {isRetrying ? 'جاري المحاولة...' : 'إعادة المحاولة'}
+          </button>
+        )}
+      </div>
+    </DetailCard>
+  );
+}
 
 export function PaymentDetailsPage() {
   const { id } = useParams();
@@ -82,27 +156,39 @@ export function ComplaintDetailsPage() {
   const { id: routeComplaintId } = useParams<{ id?: string }>();
   const session = useSession();
   const complaintId = routeComplaintId?.trim() || session.complaintId || '';
-  const { data: complaint, isLoading, isError } = useQuery({
+  const hasComplaintId = complaintId.length > 0;
+  const hasValidComplaintId = hasComplaintId && isUuidLike(complaintId);
+  const invalidIdError = hasComplaintId && !hasValidComplaintId;
+  const { data: complaint, isFetching, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['complaint', complaintId],
     queryFn: () => complaintService.getBackendComplaintById(complaintId),
-    enabled: Boolean(complaintId),
+    enabled: hasValidComplaintId,
   });
+  const complaintErrorKind = invalidIdError
+    ? 'invalid-id'
+    : isError
+      ? getComplaintDetailErrorKind(error)
+      : undefined;
 
   return (
     <PageFrame>
       <CoreTopBar title="تفاصيل الشكوى" back />
       <main className="space-y-5 px-5 pt-6">
-        {isLoading && (
+        {isLoading && hasValidComplaintId && (
           <DetailCard>
             <p className="text-center text-sm font-bold text-secondary">جاري تحميل تفاصيل الشكوى...</p>
           </DetailCard>
         )}
-        {isError && (
-          <DetailCard>
-            <p className="text-right text-sm text-error">تعذر تحميل تفاصيل الشكوى من الخادم.</p>
-          </DetailCard>
+        {complaintErrorKind && (
+          <ComplaintDetailErrorCard
+            kind={complaintErrorKind}
+            isRetrying={isFetching}
+            onRetry={complaintErrorKind === 'load-failed' ? () => {
+              void refetch();
+            } : undefined}
+          />
         )}
-        {!isLoading && !isError && !complaint && (
+        {!hasComplaintId && (
           <DetailCard>
             <p className="text-center text-sm text-on-surface-variant">لا توجد تفاصيل شكوى متاحة لهذا البلاغ.</p>
           </DetailCard>
