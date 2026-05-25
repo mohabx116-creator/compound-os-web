@@ -79,11 +79,11 @@ export function PaymentDetailsPage() {
 }
 
 export function ComplaintDetailsPage() {
-  const { id } = useParams();
+  const { id: routeComplaintId } = useParams<{ id?: string }>();
   const session = useSession();
-  const complaintId = id ?? session.complaintId ?? '';
+  const complaintId = routeComplaintId?.trim() || session.complaintId || '';
   const { data: complaint, isLoading, isError } = useQuery({
-    queryKey: ['complaints', 'detail', complaintId],
+    queryKey: ['complaint', complaintId],
     queryFn: () => complaintService.getBackendComplaintById(complaintId),
     enabled: Boolean(complaintId),
   });
@@ -112,19 +112,19 @@ export function ComplaintDetailsPage() {
         <DetailCard className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex gap-2">
-              <StatusChip label={complaintStatusLabel(complaint?.status)} tone={statusTone(complaint?.status)} />
-              <StatusChip label={complaint?.priority === 'HIGH' ? 'هامة' : 'عادية'} tone={complaint?.priority === 'HIGH' ? 'danger' : 'neutral'} />
+              <StatusChip label={complaintStatusLabel(complaint.status)} tone={statusTone(complaint.status)} />
+              <StatusChip label={complaint.priority === 'HIGH' ? 'هامة' : 'عادية'} tone={complaint.priority === 'HIGH' ? 'danger' : 'neutral'} />
             </div>
-            <p className="text-sm text-on-surface-variant">بلاغ رقم {complaint?.id ?? 'comp-001'}</p>
+            <p className="text-sm text-on-surface-variant">بلاغ رقم {complaint.id}</p>
           </div>
-          <h1 className="text-right text-2xl font-bold leading-9 text-primary">{complaint?.title ?? 'صيانة المصاعد - البرج أ'}</h1>
-          <p className="text-right text-sm text-on-surface-variant">تم الإنشاء: {complaint?.createdAt?.slice(0, 10) ?? '2024-05-20'}</p>
+          <h1 className="text-right text-2xl font-bold leading-9 text-primary">{complaint.title}</h1>
+          <p className="text-right text-sm text-on-surface-variant">تم الإنشاء: {complaint.createdAt.slice(0, 10)}</p>
         </DetailCard>
 
         <DetailCard>
           <SectionTitle title="تفاصيل البلاغ" icon={FileText} />
           <p className="mt-3 text-right leading-7 text-on-surface-variant">
-            {complaint?.description ?? 'يوجد عطل متكرر يحتاج إلى متابعة عاجلة من فريق الصيانة.'}
+            {complaint.description}
           </p>
           <div className="mt-4 overflow-hidden rounded-[22px] bg-surface-container-low">
             <img alt="" className="h-36 w-full object-cover" src={heroImages.maintenance} />
