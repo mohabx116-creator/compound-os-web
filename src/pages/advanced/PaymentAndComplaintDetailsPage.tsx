@@ -1,25 +1,123 @@
 import { useQuery } from '@tanstack/react-query';
-import { Clock3, Download, FileCheck, FileText, History, Info, Star } from 'lucide-react';
+import { Clock3, Download, FileCheck, FileText, History, Info } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { CoreTopBar } from '../../components/layout/CoreTopBar';
 import { DetailCard } from '../../components/ui/DetailCard';
 import { InfoRow } from '../../components/ui/InfoRow';
 import { StatusChip } from '../../components/ui/StatusChip';
 import { Timeline } from '../../components/ui/Timeline';
-import { complaintService } from '../../features/complaints/services/complaint.service';
 import { paymentService } from '../../features/payments/services/payment.service';
 import { ApiClientError } from '../../lib/api/api-client';
+import { complaintApiService } from '../../lib/api/complaint-service';
+import type { Complaint, ComplaintPriority, ComplaintStatus, UnitStatus, UnitType } from '../../lib/api/types';
 import { ROUTES } from '../../lib/constants/routes';
 import { useSession } from '../../lib/session/use-session';
 import { formatMoney } from '../../lib/utils/format-money';
-import { complaintStatusLabel, heroImages, PageFrame, paymentStatusLabel, SectionTitle, statusTone } from './shared';
+import { heroImages, PageFrame, paymentStatusLabel, SectionTitle, statusTone } from './shared';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type ComplaintDetailErrorKind = 'invalid-id' | 'not-found' | 'load-failed';
+type ChipTone = 'success' | 'warning' | 'danger' | 'neutral';
+
+const complaintStatusLabels: Record<ComplaintStatus, string> = {
+  OPEN: 'مفتوحة',
+  IN_PROGRESS: 'قيد المعالجة',
+  RESOLVED: 'تم الحل',
+  CLOSED: 'مغلقة',
+  ESCALATED: 'مصعدة',
+};
+
+const complaintPriorityLabels: Record<ComplaintPriority, string> = {
+  LOW: 'منخفضة',
+  MEDIUM: 'متوسطة',
+  HIGH: 'عالية',
+  URGENT: 'عاجلة',
+};
+
+const unitTypeLabels: Record<UnitType, string> = {
+  APARTMENT: 'شقة',
+  VILLA: 'فيلا',
+  SHOP: 'محل',
+  OFFICE: 'مكتب',
+};
+
+const unitStatusLabels: Record<UnitStatus, string> = {
+  OCCUPIED: 'مشغولة',
+  VACANT: 'شاغرة',
+  MAINTENANCE: 'صيانة',
+};
 
 function isUuidLike(value: string) {
   return uuidPattern.test(value);
+}
+
+function formatDateTime(value: string) {
+  try {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat('ar-EG', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(date);
+  } catch {
+    return value;
+  }
+}
+
+function complaintStatusLabel(status: ComplaintStatus) {
+  return complaintStatusLabels[status] ?? status;
+}
+
+function complaintPriorityLabel(priority: ComplaintPriority) {
+  return complaintPriorityLabels[priority] ?? priority;
+}
+
+function unitTypeLabel(unitType: UnitType) {
+  return unitTypeLabels[unitType] ?? unitType;
+}
+
+function unitStatusLabel(status: UnitStatus) {
+  return unitStatusLabels[status] ?? status;
+}
+
+function complaintStatusTone(status: ComplaintStatus): ChipTone {
+  if (status === 'RESOLVED' || status === 'CLOSED') return 'success';
+  if (status === 'OPEN' || status === 'ESCALATED') return 'danger';
+  return 'warning';
+}
+
+function complaintPriorityTone(priority: ComplaintPriority): ChipTone {
+  if (priority === 'URGENT' || priority === 'HIGH') return 'danger';
+  if (priority === 'MEDIUM') return 'warning';
+  return 'neutral';
+}
+
+function unitStatusTone(status: UnitStatus): ChipTone {
+  if (status === 'OCCUPIED') return 'success';
+  if (status === 'MAINTENANCE') return 'warning';
+  return 'neutral';
+}
+
+function complaintTimeline(complaint: Complaint) {
+  return [
+    {
+      title: 'تم إنشاء الشكوى',
+      description: 'تم تسجيل الشكوى وإرسالها إلى الإدارة المختصة.',
+      time: formatDateTime(complaint.createdAt),
+      done: true,
+    },
+    {
+      title: 'آخر تحديث',
+      description: `حالة الشكوى الحالية: ${complaintStatusLabel(complaint.status)}.`,
+      time: formatDateTime(complaint.updatedAt),
+      done: complaint.status !== 'OPEN',
+    },
+  ];
 }
 
 function getComplaintDetailErrorKind(error: unknown): ComplaintDetailErrorKind {
@@ -161,7 +259,7 @@ export function ComplaintDetailsPage() {
   const invalidIdError = hasComplaintId && !hasValidComplaintId;
   const { data: complaint, isFetching, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['complaint', complaintId],
-    queryFn: () => complaintService.getBackendComplaintById(complaintId),
+    queryFn: () => complaintApiService.getComplaintById(complaintId),
     enabled: hasValidComplaintId,
   });
   const complaintErrorKind = invalidIdError
@@ -195,50 +293,75 @@ export function ComplaintDetailsPage() {
         )}
         {complaint && (
           <>
-        <DetailCard className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex gap-2">
-              <StatusChip label={complaintStatusLabel(complaint.status)} tone={statusTone(complaint.status)} />
-              <StatusChip label={complaint.priority === 'HIGH' ? 'هامة' : 'عادية'} tone={complaint.priority === 'HIGH' ? 'danger' : 'neutral'} />
-            </div>
-            <p className="text-sm text-on-surface-variant">بلاغ رقم {complaint.id}</p>
-          </div>
-          <h1 className="text-right text-2xl font-bold leading-9 text-primary">{complaint.title}</h1>
-          <p className="text-right text-sm text-on-surface-variant">تم الإنشاء: {complaint.createdAt.slice(0, 10)}</p>
-        </DetailCard>
+            <DetailCard className="space-y-5">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    <StatusChip label={complaintStatusLabel(complaint.status)} tone={complaintStatusTone(complaint.status)} />
+                    <StatusChip label={complaintPriorityLabel(complaint.priority)} tone={complaintPriorityTone(complaint.priority)} />
+                  </div>
+                  <p className="text-right text-xs font-semibold text-on-surface-variant break-all">رقم الشكوى: {complaint.id}</p>
+                </div>
+                <div className="text-right">
+                  <h1 className="text-2xl font-bold leading-9 text-primary">{complaint.title}</h1>
+                  <p className="mt-2 text-sm text-on-surface-variant">ملخص بيانات الشكوى الحالية من النظام.</p>
+                </div>
+              </div>
+              <div>
+                <InfoRow label="حالة الشكوى" value={complaintStatusLabel(complaint.status)} />
+                <InfoRow label="أولوية الشكوى" value={complaintPriorityLabel(complaint.priority)} />
+                <InfoRow label="تاريخ الإنشاء" value={formatDateTime(complaint.createdAt)} />
+                <InfoRow label="آخر تحديث" value={formatDateTime(complaint.updatedAt)} />
+              </div>
+            </DetailCard>
 
-        <DetailCard>
-          <SectionTitle title="تفاصيل البلاغ" icon={FileText} />
-          <p className="mt-3 text-right leading-7 text-on-surface-variant">
-            {complaint.description}
-          </p>
-          <div className="mt-4 overflow-hidden rounded-[22px] bg-surface-container-low">
-            <img alt="" className="h-36 w-full object-cover" src={heroImages.maintenance} />
-          </div>
-        </DetailCard>
+            <DetailCard>
+              <SectionTitle title="وصف الشكوى" icon={FileText} />
+              <p className="mt-4 text-right text-base leading-8 text-on-surface-variant">
+                {complaint.description}
+              </p>
+              <div className="mt-4 overflow-hidden rounded-[22px] bg-surface-container-low">
+                <img alt="" className="h-36 w-full object-cover" src={heroImages.maintenance} />
+              </div>
+            </DetailCard>
 
-        <DetailCard>
-          <SectionTitle title="تتبع الحالة" icon={Clock3} />
-          <div className="mt-4">
-            <Timeline
-              items={(complaint?.timeline ?? []).map((item, index) => ({
-                title: item.status,
-                description: item.note,
-                time: item.date.slice(0, 10),
-                done: index < 2,
-              }))}
-            />
-          </div>
-        </DetailCard>
+            <DetailCard>
+              <SectionTitle title="بيانات الساكن" icon={Info} />
+              <div className="mt-3">
+                <InfoRow label="اسم الساكن" value={complaint.resident?.fullName ?? 'غير متاح'} />
+                <InfoRow label="رقم الهاتف" value={complaint.resident?.phone ?? 'غير متاح'} />
+              </div>
+            </DetailCard>
 
-        <DetailCard>
-          <SectionTitle title="تقييم الخدمة" icon={Star} />
-          <div className="mt-4 flex justify-center gap-2 text-tertiary">
-            {Array.from({ length: 5 }, (_, index) => (
-              <Star key={index} className="h-8 w-8 fill-current" />
-            ))}
-          </div>
-        </DetailCard>
+            <DetailCard>
+              <SectionTitle title="بيانات الوحدة" icon={Info} />
+              {complaint.unit ? (
+                <div className="mt-3">
+                  <InfoRow label="رقم الوحدة" value={complaint.unit.unitNumber} />
+                  <InfoRow label="نوع الوحدة" value={unitTypeLabel(complaint.unit.unitType)} />
+                  <InfoRow
+                    label="حالة الوحدة"
+                    value={<StatusChip label={unitStatusLabel(complaint.unit.status)} tone={unitStatusTone(complaint.unit.status)} />}
+                  />
+                </div>
+              ) : (
+                <p className="mt-4 text-right text-sm leading-6 text-on-surface-variant">لا توجد وحدة مرتبطة بهذه الشكوى.</p>
+              )}
+            </DetailCard>
+
+            <DetailCard>
+              <SectionTitle title="بيانات الكمباوند" icon={Info} />
+              <div className="mt-3">
+                <InfoRow label="اسم الكمباوند" value={complaint.compound?.name ?? 'غير متاح'} />
+              </div>
+            </DetailCard>
+
+            <DetailCard>
+              <SectionTitle title="تتبع الحالة" icon={Clock3} />
+              <div className="mt-4">
+                <Timeline items={complaintTimeline(complaint)} />
+              </div>
+            </DetailCard>
           </>
         )}
       </main>
