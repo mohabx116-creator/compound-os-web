@@ -47,6 +47,7 @@ export type ComplaintStatus = (typeof complaintStatuses)[number];
 export interface Compound {
   id: string;
   name: string;
+  code?: string | null;
   address?: string | null;
   logoUrl?: string | null;
   adminEmail: string;

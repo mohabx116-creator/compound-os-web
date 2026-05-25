@@ -1,11 +1,11 @@
 import { LogIn, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppLogo } from '../components/brand/AppLogo';
-import { getCurrentSessionIdentity } from '../lib/session/session-adapter';
 import { ROUTES } from '../lib/constants/routes';
+import { useSession } from '../lib/session/use-session';
 
 export function SplashPage() {
-  const isAuthenticated = getCurrentSessionIdentity().isAuthenticated;
+  const { isAuthenticated } = useSession();
 
   return (
     <section className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 text-center">

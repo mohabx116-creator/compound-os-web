@@ -4,7 +4,6 @@ import type { LucideIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CoreTopBar } from '../components/layout/CoreTopBar';
 import { profileService } from '../features/profile/services/profile.service';
-import { clearMockAuthentication } from '../lib/auth/mock-auth';
 import { ROUTES } from '../lib/constants/routes';
 import { useSession } from '../lib/session/use-session';
 import { useAppStore } from '../stores/app.store';
@@ -66,16 +65,18 @@ export function ProfilePage() {
   const { data: residentData, isLoading: residentLoading, isError: residentError } = useQuery({
     queryKey: ['profile', session.residentId],
     queryFn: () => profileService.getBackendResidentProfile(session.residentId),
+    enabled: Boolean(session.residentId),
   });
   const { data: unitData, isLoading: unitLoading, isError: unitError } = useQuery({
     queryKey: ['unit', session.unitId],
     queryFn: () => profileService.getBackendUnitDetails(session.unitId),
+    enabled: Boolean(session.unitId),
   });
   const resident = residentData ?? fallbackResident;
   const unit = unitData ?? fallbackUnit;
 
   function handleLogout() {
-    clearMockAuthentication();
+    session.logout();
     navigate(ROUTES.LOGIN, { replace: true });
   }
 
