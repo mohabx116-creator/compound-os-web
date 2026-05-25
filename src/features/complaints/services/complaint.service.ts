@@ -1,8 +1,18 @@
 import { delay } from '../../../lib/utils/delay';
 import { complaintApiService } from '../../../lib/api/complaint-service';
-import type { Complaint as ApiComplaint } from '../../../lib/api/types';
+import type { Complaint as ApiComplaint, ComplaintPriority, ComplaintStatus } from '../../../lib/api/types';
 import { useAppStore } from '../../../stores/app.store';
 import type { Complaint } from '../../../types/common.types';
+
+interface CreateComplaintInput {
+  compoundId: string;
+  residentId: string;
+  unitId?: string;
+  title: string;
+  description: string;
+  priority?: ComplaintPriority;
+  status?: ComplaintStatus;
+}
 
 function complaintCategory(complaint: ApiComplaint) {
   return complaint.unit?.unitNumber ?? complaint.compound?.name ?? 'Complaint';
@@ -73,9 +83,8 @@ export const complaintService = {
     }
   },
 
-  async createComplaint(data: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt' | 'residentId' | 'timeline'>): Promise<Complaint> {
-    // Mock-only until a later phase explicitly wires complaint mutations to the backend.
-    await delay(500);
-    return useAppStore.getState().addComplaint(data);
+  async createComplaint(data: CreateComplaintInput): Promise<Complaint> {
+    const createdComplaint = await complaintApiService.createComplaint(data);
+    return mapComplaintFromApi(createdComplaint);
   },
 };

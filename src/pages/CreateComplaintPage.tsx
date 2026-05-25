@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Camera, ChevronRight, ImagePlus, SendHorizontal, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -6,7 +7,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { SuccessFeedback } from '../components/ui/SuccessFeedback';
 import { complaintService } from '../features/complaints/services/complaint.service';
+import { complaintPriorities } from '../lib/api/types';
 import { ROUTES } from '../lib/constants/routes';
+import { useSession } from '../lib/session/use-session';
 import { cn } from '../lib/utils/cn';
 
 const categories = ['كهرباء', 'سباكة', 'أمن', 'نظافة', 'أخرى'] as const;
@@ -14,20 +17,32 @@ const priorities = [
   { label: 'عادية', value: 'LOW' },
   { label: 'مهمة', value: 'MEDIUM' },
   { label: 'عاجلة', value: 'HIGH' },
+  { label: 'طارئة', value: 'URGENT' },
 ] as const;
 
 const complaintSchema = z.object({
   category: z.enum(categories, { required_error: 'اختر تصنيف المشكلة' }),
-  title: z.string().min(3, 'اكتب عنوانا واضحا للشكوى'),
-  description: z.string().min(10, 'اكتب تفاصيل كافية عن المشكلة'),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+  title: z.string().trim().min(3, 'اكتب عنوانا واضحا للشكوى'),
+  description: z.string().trim().min(10, 'اكتب تفاصيل كافية عن المشكلة'),
+  priority: z.enum(complaintPriorities),
 });
 
 type ComplaintFormValues = z.infer<typeof complaintSchema>;
 
 export function CreateComplaintPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const session = useSession();
   const [submitted, setSubmitted] = useState(false);
+  const createComplaintMutation = useMutation({
+    mutationFn: complaintService.createComplaint,
+    onSuccess: async () => {
+      setSubmitted(true);
+      await queryClient.invalidateQueries({
+        queryKey: ['complaints', 'resident', session.residentId],
+      });
+    },
+  });
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -46,16 +61,26 @@ export function CreateComplaintPage() {
 
   const selectedCategory = watch('category');
   const selectedPriority = watch('priority');
+  const isPending = isSubmitting || createComplaintMutation.isPending;
+  const errorMessage = createComplaintMutation.error instanceof Error
+    ? createComplaintMutation.error.message
+    : 'تعذر إرسال الشكوى. حاول مرة أخرى.';
 
   const onSubmit = handleSubmit(async (values) => {
-    await complaintService.createComplaint({
+    if (isPending || submitted) return;
+
+    setSubmitted(false);
+    createComplaintMutation.reset();
+
+    await createComplaintMutation.mutateAsync({
+      compoundId: session.compoundId,
+      residentId: session.residentId,
+      unitId: session.unitId,
       title: values.title,
       description: values.description,
-      category: values.category,
       priority: values.priority,
       status: 'OPEN',
     });
-    setSubmitted(true);
   });
 
   return (
@@ -139,7 +164,7 @@ export function CreateComplaintPage() {
 
         <section>
           <h3 className="mb-4 text-right text-xl font-bold text-primary">الأولوية</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {priorities.map((priority) => (
               <button
                 key={priority.value}
@@ -158,9 +183,20 @@ export function CreateComplaintPage() {
           </div>
         </section>
 
+        {createComplaintMutation.isError && (
+          <div className="rounded-2xl border border-error/20 bg-error-container/40 px-4 py-3 text-right text-sm font-semibold text-error">
+            {errorMessage}
+          </div>
+        )}
+
         {submitted && (
           <div className="space-y-3">
             <SuccessFeedback message="تم إرسال الشكوى بنجاح" />
+            {createComplaintMutation.data?.id && (
+              <p className="text-center text-sm font-semibold text-on-surface-variant">
+                رقم الشكوى: {createComplaintMutation.data.id}
+              </p>
+            )}
             <Link className="block text-center text-sm font-bold text-secondary" to={ROUTES.COMPLAINTS}>
               العودة إلى قائمة الشكاوى
             </Link>
@@ -170,11 +206,11 @@ export function CreateComplaintPage() {
         <div className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[480px] border-t border-outline-variant/50 bg-background px-5 py-4">
           <button
             className="flex w-full items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-lg font-bold text-white shadow-xl shadow-primary/15 disabled:opacity-70"
-            disabled={isSubmitting}
+            disabled={isPending || submitted}
             type="submit"
           >
             <SendHorizontal className="h-6 w-6" />
-            إرسال الشكوى
+            {isPending ? 'جاري الإرسال...' : 'إرسال الشكوى'}
           </button>
         </div>
       </form>

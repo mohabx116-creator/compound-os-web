@@ -81,6 +81,46 @@ export interface ApiData<T> {
   message: string;
 }
 
+function unwrapApiData<T>(body: unknown, status: number): ApiData<T> {
+  if (!isApiResponse<T>(body)) {
+    throw new ApiClientError('Unexpected API response shape', 'INVALID_RESPONSE', status, body);
+  }
+
+  if (!body.success) {
+    throw new ApiClientError(body.message || 'Request failed', 'API_ERROR', status, body);
+  }
+
+  if (body.data === undefined) {
+    throw new ApiClientError('API response did not include data', 'INVALID_RESPONSE', status, body);
+  }
+
+  return {
+    data: body.data,
+    meta: body.meta,
+    message: body.message,
+  };
+}
+
+function normalizeApiError(error: unknown): ApiClientError {
+  if (error instanceof ApiClientError) {
+    return error;
+  }
+
+  if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
+    const status = error.response?.status;
+    const body = error.response?.data;
+    const message = getEnvelopeMessage(body) || error.message || 'Unable to reach Compound OS API';
+    const code = status ? 'HTTP_ERROR' : 'NETWORK_ERROR';
+
+    return new ApiClientError(message, code, status, body);
+  }
+
+  return new ApiClientError(
+    error instanceof Error ? error.message : 'Unexpected API client error',
+    'UNKNOWN_ERROR',
+  );
+}
+
 export async function getApiData<T>(
   path: string,
   params?: object,
@@ -91,40 +131,22 @@ export async function getApiData<T>(
     });
     const body = response.data;
 
-    if (!isApiResponse<T>(body)) {
-      throw new ApiClientError('Unexpected API response shape', 'INVALID_RESPONSE', response.status, body);
-    }
-
-    if (!body.success) {
-      throw new ApiClientError(body.message || 'Request failed', 'API_ERROR', response.status, body);
-    }
-
-    if (body.data === undefined) {
-      throw new ApiClientError('API response did not include data', 'INVALID_RESPONSE', response.status, body);
-    }
-
-    return {
-      data: body.data,
-      meta: body.meta,
-      message: body.message,
-    };
+    return unwrapApiData<T>(body, response.status);
   } catch (error) {
-    if (error instanceof ApiClientError) {
-      throw error;
-    }
+    throw normalizeApiError(error);
+  }
+}
 
-    if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
-      const status = error.response?.status;
-      const body = error.response?.data;
-      const message = getEnvelopeMessage(body) || error.message || 'Unable to reach Compound OS API';
-      const code = status ? 'HTTP_ERROR' : 'NETWORK_ERROR';
+export async function postApiData<T>(
+  path: string,
+  payload?: object,
+): Promise<ApiData<T>> {
+  try {
+    const response = await apiClient.post<unknown>(path, payload);
+    const body = response.data;
 
-      throw new ApiClientError(message, code, status, body);
-    }
-
-    throw new ApiClientError(
-      error instanceof Error ? error.message : 'Unexpected API client error',
-      'UNKNOWN_ERROR',
-    );
+    return unwrapApiData<T>(body, response.status);
+  } catch (error) {
+    throw normalizeApiError(error);
   }
 }
