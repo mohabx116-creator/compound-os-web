@@ -1,21 +1,17 @@
 import { createContext, useEffect, useMemo, useState } from 'react';
 import type { PropsWithChildren } from 'react';
-import { DEMO_IDS } from '../api/demo-ids';
-import { MOCK_AUTH_CHANGE_EVENT, isMockAuthenticated } from '../auth/mock-auth';
+import { MOCK_AUTH_CHANGE_EVENT } from '../auth/mock-auth';
+import { getCurrentSessionIdentity } from './session-adapter';
 import type { AppSession } from './session.types';
 
 export const SessionContext = createContext<AppSession | null>(null);
 
-function readMockAuthState() {
-  return typeof window !== 'undefined' ? isMockAuthenticated() : false;
-}
-
 export function SessionProvider({ children }: PropsWithChildren) {
-  const [isAuthenticated, setIsAuthenticated] = useState(readMockAuthState);
+  const [sessionIdentity, setSessionIdentity] = useState(getCurrentSessionIdentity);
 
   useEffect(() => {
     function syncAuthState() {
-      setIsAuthenticated(readMockAuthState());
+      setSessionIdentity(getCurrentSessionIdentity());
     }
 
     window.addEventListener('storage', syncAuthState);
@@ -29,13 +25,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  const session = useMemo<AppSession>(() => ({
-    isAuthenticated,
-    compoundId: DEMO_IDS.compoundId,
-    residentId: DEMO_IDS.residentId,
-    unitId: DEMO_IDS.unitId,
-    complaintId: DEMO_IDS.complaintId,
-  }), [isAuthenticated]);
+  const session = useMemo<AppSession>(() => sessionIdentity, [sessionIdentity]);
 
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 }

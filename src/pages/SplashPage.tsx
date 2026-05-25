@@ -1,11 +1,11 @@
 import { LogIn, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppLogo } from '../components/brand/AppLogo';
-import { isMockAuthenticated } from '../lib/auth/mock-auth';
+import { getCurrentSessionIdentity } from '../lib/session/session-adapter';
 import { ROUTES } from '../lib/constants/routes';
 
 export function SplashPage() {
-  const isAuthenticated = isMockAuthenticated();
+  const isAuthenticated = getCurrentSessionIdentity().isAuthenticated;
 
   return (
     <section className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background px-5 text-center">

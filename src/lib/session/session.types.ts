@@ -4,4 +4,7 @@ export interface AppSession {
   residentId: string;
   unitId: string;
   complaintId?: string;
+  source: 'demo' | 'authenticated';
+  isLoading?: boolean;
+  error?: string | null;
 }
