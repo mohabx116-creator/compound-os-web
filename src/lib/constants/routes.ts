@@ -25,4 +25,8 @@ export const ROUTES = {
   SETTINGS: '/profile/settings',
   SUPPORT: '/profile/support',
   FAQ: '/profile/faq',
+  RENTALS: '/rentals',
+  RENTAL_DETAILS: '/rentals/:slug',
+  RENTAL_CONTACT: '/rentals/:slug/contact',
+  RENTAL_RESERVATION: '/rentals/reservations/:id',
 } as const;

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { MobileAppShell } from '../components/layout/MobileAppShell';
+import { PublicRentalShell } from '../components/layout/PublicRentalShell';
 import { ROUTES } from '../lib/constants/routes';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
 import { ProtectedRoute } from './route-guards';
@@ -14,6 +15,10 @@ const ComplaintsPage = lazy(() => import('../pages/ComplaintsPage').then((module
 const CreateComplaintPage = lazy(() => import('../pages/CreateComplaintPage').then((module) => ({ default: module.CreateComplaintPage })));
 const ServicesPage = lazy(() => import('../pages/ServicesPage').then((module) => ({ default: module.ServicesPage })));
 const ProfilePage = lazy(() => import('../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const PublicRentalsPage = lazy(() => import('../pages/rentals/PublicRentalsPage').then((module) => ({ default: module.PublicRentalsPage })));
+const PublicRentalDetailPage = lazy(() => import('../pages/rentals/PublicRentalDetailPage').then((module) => ({ default: module.PublicRentalDetailPage })));
+const PublicRentalContactPage = lazy(() => import('../pages/rentals/PublicRentalContactPage').then((module) => ({ default: module.PublicRentalContactPage })));
+const PublicRentalReservationPage = lazy(() => import('../pages/rentals/PublicRentalReservationPage').then((module) => ({ default: module.PublicRentalReservationPage })));
 
 const PaymentDetailsPage = lazy(() =>
   import('../pages/advanced/PaymentAndComplaintDetailsPage').then((module) => ({ default: module.PaymentDetailsPage })),
@@ -78,6 +83,10 @@ const implementedRoutes = new Set<string>([
   ROUTES.SETTINGS,
   ROUTES.SUPPORT,
   ROUTES.FAQ,
+  ROUTES.RENTALS,
+  ROUTES.RENTAL_DETAILS,
+  ROUTES.RENTAL_CONTACT,
+  ROUTES.RENTAL_RESERVATION,
 ]);
 
 const placeholderRoutes = routeMeta.filter(
@@ -88,6 +97,12 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route element={<PublicRentalShell />}>
+          <Route path={ROUTES.RENTALS} element={<Suspense fallback={<RouteLoadingFallback />}><PublicRentalsPage /></Suspense>} />
+          <Route path={ROUTES.RENTAL_DETAILS} element={<Suspense fallback={<RouteLoadingFallback />}><PublicRentalDetailPage /></Suspense>} />
+          <Route path={ROUTES.RENTAL_CONTACT} element={<Suspense fallback={<RouteLoadingFallback />}><PublicRentalContactPage /></Suspense>} />
+          <Route path={ROUTES.RENTAL_RESERVATION} element={<Suspense fallback={<RouteLoadingFallback />}><PublicRentalReservationPage /></Suspense>} />
+        </Route>
         <Route element={<MobileAppShell />}>
           <Route path={ROUTES.SPLASH} element={<Suspense fallback={<RouteLoadingFallback />}><SplashPage /></Suspense>} />
           <Route path={ROUTES.LOGIN} element={<Suspense fallback={<RouteLoadingFallback />}><LoginPage /></Suspense>} />
