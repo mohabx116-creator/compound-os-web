@@ -1,4 +1,4 @@
 export const RESIDENT_TENANT_CONTEXT = {
   compoundCode: 'black-horse',
-  displayName: 'Black Horse',
+  displayName: 'Sebahi Compound',
 } as const;
