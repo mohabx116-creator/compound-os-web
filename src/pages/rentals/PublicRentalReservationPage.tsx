@@ -3,7 +3,7 @@ import { ArrowLeft, CalendarClock, CheckCircle2, Clock, Home, ShieldCheck, XCirc
 import { Link, useParams } from 'react-router-dom';
 import { rentalApiService } from '../../lib/api/rental-service';
 import { ROUTES } from '../../lib/constants/routes';
-import { formatRentalDate, formatRentalMoney, listingStatusLabels, reservationStatusLabels, shortId } from './rental-format';
+import { formatRentalDate, formatRentalMoney, listingStatusLabels, publicRentalText, reservationStatusLabels, shortId } from './rental-format';
 
 function StatusIcon({ status }: { status: string }) {
   if (status === 'CONFIRMED' || status === 'RESERVED' || status === 'PAID_PENDING_CONFIRMATION') {
@@ -13,6 +13,15 @@ function StatusIcon({ status }: { status: string }) {
     return <XCircle className="h-12 w-12 text-error" />;
   }
   return <Clock className="h-12 w-12 text-tertiary" />;
+}
+
+function statusDescription(status: string) {
+  if (status === 'CONFIRMED') return 'تم تأكيد الحجز من خلال الخادم.';
+  if (status === 'RESERVED' || status === 'PAID_PENDING_CONFIRMATION') return 'تم تسجيل الدفع أو الحجز، ويجري انتظار التأكيد النهائي.';
+  if (status === 'PAYMENT_LOCKED' || status === 'PENDING_PAYMENT') return 'طلب الحجز بدأ، لكن الدفع لم يكتمل أو لم يؤكد بعد.';
+  if (status === 'CANCELLED') return 'تم إلغاء هذا الطلب.';
+  if (status === 'EXPIRED') return 'انتهت مهلة الطلب ولم يعد الحجز فعالا.';
+  return 'تابع حالة الطلب من هذه الصفحة، ولا تعتمد على أي تأكيد خارج الخادم.';
 }
 
 export function PublicRentalReservationPage() {
@@ -45,6 +54,7 @@ export function PublicRentalReservationPage() {
   }
 
   const reservation = reservationQuery.data;
+  const listingTitle = reservation.listing ? publicRentalText(reservation.listing.title) : null;
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -65,14 +75,14 @@ export function PublicRentalReservationPage() {
               <p className="text-sm font-bold text-on-surface-variant">الحالة الحالية</p>
               <p className="mt-2 text-3xl font-black text-primary">{reservationStatusLabels[reservation.status]}</p>
               <p className="mt-3 text-sm leading-7 text-on-surface-variant">
-                لا يعتبر الحجز مؤكدا إلا بعد تأكيد الدفع والمعالجة من الخادم. لا تعتمد هذه الصفحة على حالة دفع مرسلة من المتصفح.
+                {statusDescription(reservation.status)} لا يعتبر الحجز مؤكدا إلا بعد تأكيد الدفع والمعالجة من الخادم.
               </p>
             </div>
 
             {reservation.listing && (
               <Link className="block rounded-[28px] border border-outline-variant/60 p-5 hover:bg-surface-container-low" to={`/rentals/${reservation.listing.slug}`}>
                 <p className="text-sm font-bold text-secondary">الوحدة المرتبطة</p>
-                <h2 className="mt-2 text-2xl font-black text-primary">{reservation.listing.title}</h2>
+                <h2 className="mt-2 text-2xl font-black text-primary">{listingTitle}</h2>
                 <p className="mt-2 text-sm text-on-surface-variant">حالة الوحدة: {listingStatusLabels[reservation.listing.status] ?? reservation.listing.status}</p>
               </Link>
             )}
@@ -94,7 +104,7 @@ export function PublicRentalReservationPage() {
             </div>
             <div className="rounded-2xl bg-secondary/10 p-4 text-sm leading-7 text-secondary">
               <ShieldCheck className="mb-2 h-5 w-5" />
-              الدفع والحجز النهائي يعالجان من خلال الخادم فقط.
+              الدفع والحجز النهائي يعالجان من خلال الخادم فقط. لا توجد أي حالة نجاح وهمية في هذه الواجهة.
             </div>
           </aside>
         </div>

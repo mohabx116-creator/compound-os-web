@@ -27,6 +27,9 @@ import {
   furnishingLabels,
   listingStatusLabels,
   listingTypeLabels,
+  publicCompoundName,
+  publicRentalBrand,
+  publicRentalText,
   toNumber,
 } from './rental-format';
 
@@ -42,6 +45,15 @@ type VisitorFormValues = z.infer<typeof visitorSchema>;
 
 function mainImage(listing: RentalListing) {
   return listing.images.find((image) => image.isCover)?.url ?? listing.images[0]?.url ?? fallbackImage;
+}
+
+function optionalAmenities(listing: RentalListing) {
+  const value = (listing as RentalListing & { amenities?: unknown; features?: unknown }).amenities
+    ?? (listing as RentalListing & { features?: unknown }).features;
+
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : [];
 }
 
 function isPaymentProviderPending(error: unknown) {
@@ -141,6 +153,14 @@ export function PublicRentalDetailPage() {
 
   const listing = listingQuery.data;
   const gallery = listing.images.length ? listing.images : [{ id: 'fallback', url: fallbackImage, altText: listing.title, sortOrder: 0, isCover: true }];
+  const amenities = optionalAmenities(listing);
+  const title = publicRentalText(listing.title);
+  const description = publicRentalText(listing.description);
+  const location = publicRentalText(
+    listing.locationText ?? listing.addressText ?? listing.compound?.address,
+    publicRentalBrand.compoundAr,
+  );
+  const compoundName = publicCompoundName(listing.compound?.name);
   const isReservationPending = reservationMutation.isPending || isSubmitting;
 
   const onReservationSubmit = handleSubmit(async (values) => {
@@ -158,12 +178,12 @@ export function PublicRentalDetailPage() {
               رجوع إلى الإيجارات
             </Link>
             <div className="overflow-hidden rounded-[32px] bg-surface-container-low shadow-2xl shadow-primary/10">
-              <img alt={listing.title} className="aspect-[16/11] w-full object-cover lg:aspect-[16/9]" src={mainImage(listing)} />
+              <img alt={title} className="aspect-[16/11] w-full object-cover lg:aspect-[16/9]" src={mainImage(listing)} />
             </div>
             {gallery.length > 1 && (
               <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
                 {gallery.slice(0, 4).map((image) => (
-                  <img key={image.id} alt={image.altText ?? listing.title} className="aspect-[4/3] rounded-2xl object-cover" src={image.url} />
+                  <img key={image.id} alt={publicRentalText(image.altText, title)} className="aspect-[4/3] rounded-2xl object-cover" src={image.url} />
                 ))}
               </div>
             )}
@@ -174,15 +194,25 @@ export function PublicRentalDetailPage() {
               <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-bold text-secondary">{listingStatusLabels[listing.status]}</span>
               <span className="rounded-full bg-primary/5 px-3 py-1 text-sm font-bold text-primary">{listingTypeLabels[listing.listingType]}</span>
             </div>
-            <h1 className="mt-4 text-3xl font-black leading-[1.35] text-primary">{listing.title}</h1>
+            <h1 className="mt-4 text-3xl font-black leading-[1.35] text-primary">{title}</h1>
             <p className="mt-3 flex items-center gap-2 text-on-surface-variant">
               <MapPin className="h-5 w-5 shrink-0 text-secondary" />
-              {listing.locationText ?? listing.addressText ?? listing.compound?.address ?? 'Sebahi Compound'}
+              {location}
             </p>
             <div className="mt-6 rounded-[24px] bg-white p-4">
               <p className="text-sm font-bold text-on-surface-variant">الإيجار الشهري</p>
               <p className="mt-1 text-4xl font-black text-primary">{formatRentalMoney(listing.monthlyRent)}</p>
               {listing.depositAmount && <p className="mt-2 text-sm text-on-surface-variant">التأمين: {formatRentalMoney(listing.depositAmount)}</p>}
+              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-2xl bg-surface-container-low p-3">
+                  <p className="text-on-surface-variant">فتح التواصل</p>
+                  <p className="font-black text-primary">{formatRentalMoney(listing.contactUnlockFee)}</p>
+                </div>
+                <div className="rounded-2xl bg-surface-container-low p-3">
+                  <p className="text-on-surface-variant">الحجز المؤقت</p>
+                  <p className="font-black text-primary">{formatRentalMoney(listing.reservationFee)}</p>
+                </div>
+              </div>
             </div>
             <div className="mt-5 grid grid-cols-3 gap-2 text-center text-sm">
               <span className="rounded-2xl bg-white px-2 py-3 text-on-surface-variant"><BedDouble className="mx-auto mb-1 h-5 w-5 text-primary" />{listing.bedrooms} غرف</span>
@@ -201,7 +231,7 @@ export function PublicRentalDetailPage() {
             </div>
             <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-on-surface-variant">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
-              بيانات المالك لا تظهر من صفحة التفاصيل، والحجز لا يصبح مؤكدا إلا بعد تحقق الدفع من الخادم.
+              بيانات المالك لا تظهر من صفحة التفاصيل، ولا يتم تأكيد فتح التواصل أو الحجز إلا بعد تحقق الدفع من الخادم.
             </p>
           </aside>
         </div>
@@ -211,7 +241,7 @@ export function PublicRentalDetailPage() {
         <div className="space-y-6">
           <section className="rounded-[28px] border border-outline-variant/60 bg-white p-6 text-right shadow-xl shadow-primary/5">
             <h2 className="text-2xl font-black text-primary">وصف الوحدة</h2>
-            <p className="mt-4 whitespace-pre-line text-base leading-9 text-on-surface-variant">{listing.description}</p>
+            <p className="mt-4 whitespace-pre-line text-base leading-9 text-on-surface-variant">{description}</p>
           </section>
 
           <section className="rounded-[28px] border border-outline-variant/60 bg-white p-6 text-right shadow-xl shadow-primary/5">
@@ -223,6 +253,19 @@ export function PublicRentalDetailPage() {
               <div className="rounded-2xl bg-surface-container-low p-4"><dt className="text-sm text-on-surface-variant">تاريخ النشر</dt><dd className="mt-1 font-black text-primary">{formatRentalDate(listing.publishedAt)}</dd></div>
             </dl>
           </section>
+
+          {amenities.length > 0 && (
+            <section className="rounded-[28px] border border-outline-variant/60 bg-white p-6 text-right shadow-xl shadow-primary/5">
+              <h2 className="text-2xl font-black text-primary">المميزات</h2>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {amenities.map((item) => (
+                  <span key={item} className="rounded-full bg-secondary/10 px-4 py-2 text-sm font-bold text-secondary">
+                    {publicRentalText(item)}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -269,8 +312,8 @@ export function PublicRentalDetailPage() {
 
           <section className="rounded-[28px] border border-outline-variant/60 bg-white p-5 text-right shadow-xl shadow-primary/5">
             <h2 className="text-xl font-black text-primary">الموقع والكمباوند</h2>
-            <p className="mt-3 text-sm leading-7 text-on-surface-variant">{listing.compound?.name ?? 'Sebahi Compound'}</p>
-            <p className="mt-1 text-sm leading-7 text-on-surface-variant">{listing.addressText ?? listing.compound?.address ?? 'New Cairo, Egypt'}</p>
+            <p className="mt-3 text-sm leading-7 text-on-surface-variant">{compoundName}</p>
+            <p className="mt-1 text-sm leading-7 text-on-surface-variant">{publicRentalText(listing.addressText ?? listing.compound?.address, 'القاهرة الجديدة')}</p>
           </section>
         </div>
       </section>

@@ -5,6 +5,13 @@ import type {
   RentalReservationStatus,
 } from '../../lib/api/types';
 
+export const publicRentalBrand = {
+  compoundAr: 'كمباوند السبحي',
+  compoundEn: 'Sebahi Compound',
+  rentalsTitle: 'إيجارات كمباوند السبحي',
+  marketplaceLabel: 'سوق إيجارات السبحي',
+} as const;
+
 export const listingTypeLabels: Record<RentalListingType, string> = {
   APARTMENT: 'شقة',
   VILLA: 'فيلا',
@@ -71,4 +78,18 @@ export function formatRentalDate(value: string | null | undefined) {
 
 export function shortId(value: string) {
   return value.slice(0, 8);
+}
+
+export function publicRentalText(value: string | null | undefined, fallback = '') {
+  if (!value?.trim()) return fallback;
+
+  return value
+    .replace(/Black Horse Compound/gi, publicRentalBrand.compoundEn)
+    .replace(/Black Horse/gi, publicRentalBrand.compoundEn)
+    .replace(/Compound OS Demo/gi, publicRentalBrand.compoundAr)
+    .replace(/بلاك هورس/g, publicRentalBrand.compoundAr);
+}
+
+export function publicCompoundName(value: string | null | undefined) {
+  return publicRentalText(value, publicRentalBrand.compoundAr);
 }

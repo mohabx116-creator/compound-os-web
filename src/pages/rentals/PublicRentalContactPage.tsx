@@ -9,7 +9,7 @@ import { ApiClientError } from '../../lib/api/api-client';
 import { rentalApiService } from '../../lib/api/rental-service';
 import type { ContactAccessResponse, StartContactUnlockResponse } from '../../lib/api/types';
 import { ROUTES } from '../../lib/constants/routes';
-import { formatRentalMoney } from './rental-format';
+import { formatRentalMoney, publicRentalBrand, publicRentalText } from './rental-format';
 
 const contactSchema = z.object({
   tenantName: z.string().trim().min(2, 'اكتب الاسم بالكامل'),
@@ -66,6 +66,10 @@ export function PublicRentalContactPage() {
 
   const isPending = isSubmitting || accessMutation.isPending || unlockMutation.isPending;
   const listing = listingQuery.data;
+  const title = listing ? publicRentalText(listing.title) : '';
+  const location = listing
+    ? publicRentalText(listing.locationText ?? listing.addressText ?? listing.compound?.name, publicRentalBrand.compoundAr)
+    : publicRentalBrand.compoundAr;
 
   const onSubmit = handleSubmit(async (values) => {
     if (!listing) return;
@@ -89,7 +93,7 @@ export function PublicRentalContactPage() {
       setUnlockResult(result);
 
       if (result.paymentUrl) {
-        setNotice('تم تجهيز رابط الدفع. بعد إتمام الدفع، يتم فتح بيانات التواصل فقط عند تأكيد الخادم.');
+        setNotice('تم تجهيز رابط الدفع. بعد إتمام الدفع، يتم فتح بيانات التواصل فقط عند تأكيد العملية من الخادم.');
       } else if (result.alreadyUnlocked) {
         setNotice('تم العثور على فتح تواصل سابق، تحقق من بيانات التواصل مرة أخرى بنفس رقم الهاتف.');
       } else {
@@ -136,16 +140,19 @@ export function PublicRentalContactPage() {
         </Link>
         <div className="overflow-hidden rounded-[28px] bg-surface-container-low">
           <img
-            alt={listing.title}
+            alt={title}
             className="aspect-[4/3] w-full object-cover"
             src={listing.images.find((image) => image.isCover)?.url ?? listing.images[0]?.url ?? 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1000'}
           />
         </div>
-        <h1 className="mt-5 text-2xl font-black leading-9 text-primary">{listing.title}</h1>
-        <p className="mt-2 text-sm leading-7 text-on-surface-variant">{listing.locationText ?? listing.addressText ?? listing.compound?.name}</p>
+        <h1 className="mt-5 text-2xl font-black leading-9 text-primary">{title}</h1>
+        <p className="mt-2 text-sm leading-7 text-on-surface-variant">{location}</p>
         <div className="mt-5 rounded-3xl bg-surface-container-low p-4">
           <p className="text-sm font-bold text-on-surface-variant">رسوم فتح بيانات التواصل</p>
           <p className="mt-1 text-3xl font-black text-primary">{formatRentalMoney(listing.contactUnlockFee)}</p>
+          <p className="mt-2 text-xs leading-6 text-on-surface-variant">
+            لا يتم عرض رقم المالك أو بريده إلا إذا أكد الخادم أن الدفع ناجح لهذا الرقم وهذه الوحدة.
+          </p>
         </div>
       </aside>
 
@@ -156,7 +163,7 @@ export function PublicRentalContactPage() {
         </span>
         <h2 className="mt-5 text-3xl font-black leading-[1.35] text-primary">طلب بيانات التواصل مع المالك</h2>
         <p className="mt-3 text-base leading-8 text-on-surface-variant">
-          أدخل بياناتك للتحقق من وجود فتح تواصل مدفوع سابقا. إذا لم يكن لديك وصول، سنبدأ طلب الدفع من الخادم عند توفر مزود الدفع.
+          أدخل بياناتك أولا للتحقق من وجود فتح تواصل مدفوع سابقا. إذا لم يكن لديك وصول، سنبدأ طلب الدفع من الخادم عند توفر مزود الدفع.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Bath, BedDouble, Building2, Filter, Home, MapPin, Search, Sparkles } from 'lucide-react';
+import { ArrowLeft, Bath, BedDouble, Building2, Filter, Home, MapPin, Search, ShieldCheck, Sparkles } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { rentalApiService } from '../../lib/api/rental-service';
@@ -11,6 +11,9 @@ import {
   furnishingLabels,
   listingStatusLabels,
   listingTypeLabels,
+  publicCompoundName,
+  publicRentalBrand,
+  publicRentalText,
   toNumber,
 } from './rental-format';
 
@@ -40,15 +43,23 @@ function listingCover(listing: RentalListing) {
 }
 
 function RentalListingCard({ listing }: { listing: RentalListing }) {
+  const title = publicRentalText(listing.title);
+  const location = publicRentalText(
+    listing.locationText ?? listing.addressText ?? listing.compound?.address,
+    publicRentalBrand.compoundAr,
+  );
+  const compoundName = publicCompoundName(listing.compound?.name);
+
   return (
-    <article className="overflow-hidden rounded-[28px] border border-outline-variant/50 bg-white shadow-xl shadow-primary/5">
+    <article className="group overflow-hidden rounded-[28px] border border-outline-variant/50 bg-white shadow-xl shadow-primary/5 transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
       <Link className="block" to={`/rentals/${listing.slug}`}>
         <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
           <img
-            alt={listing.images[0]?.altText ?? listing.title}
+            alt={publicRentalText(listing.images[0]?.altText, title)}
             className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
             src={listingCover(listing)}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/65 via-transparent to-transparent opacity-80" />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
             <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-secondary shadow-md">
               {listingStatusLabels[listing.status]}
@@ -60,21 +71,23 @@ function RentalListingCard({ listing }: { listing: RentalListing }) {
               </span>
             )}
           </div>
+          <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+            <p className="text-xs font-bold text-secondary-fixed">الإيجار الشهري</p>
+            <p className="text-2xl font-black">{formatRentalMoney(listing.monthlyRent)}</p>
+          </div>
         </div>
       </Link>
 
       <div className="space-y-4 p-5 text-right">
         <div>
-          <p className="text-sm font-bold text-secondary">{listing.compound?.name ?? 'Sebahi Compound'}</p>
+          <p className="text-sm font-bold text-secondary">{compoundName}</p>
           <Link className="mt-1 block text-xl font-bold leading-8 text-primary hover:text-secondary" to={`/rentals/${listing.slug}`}>
-            {listing.title}
+            {title}
           </Link>
-          {(listing.locationText || listing.addressText) && (
-            <p className="mt-2 flex items-center gap-2 text-sm text-on-surface-variant">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span className="line-clamp-1">{listing.locationText ?? listing.addressText}</span>
-            </p>
-          )}
+          <p className="mt-2 flex items-center gap-2 text-sm text-on-surface-variant">
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="line-clamp-1">{location}</span>
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -98,13 +111,13 @@ function RentalListingCard({ listing }: { listing: RentalListing }) {
         </div>
 
         <div className="flex items-center justify-between gap-4 border-t border-outline-variant/50 pt-4">
-          <Link className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-bold text-white" to={`/rentals/${listing.slug}`}>
-            التفاصيل
+          <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/15" to={`/rentals/${listing.slug}`}>
+            عرض التفاصيل
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="text-right">
-            <p className="text-xs font-bold text-on-surface-variant">الإيجار الشهري</p>
-            <p className="text-xl font-extrabold text-primary">{formatRentalMoney(listing.monthlyRent)}</p>
+            <p className="text-xs font-bold text-on-surface-variant">رسوم فتح التواصل</p>
+            <p className="text-base font-extrabold text-primary">{formatRentalMoney(listing.contactUnlockFee)}</p>
           </div>
         </div>
       </div>
@@ -144,6 +157,10 @@ export function PublicRentalsPage() {
 
   const listings = listingsQuery.data?.data ?? [];
   const totalCount = listingsQuery.data?.meta?.totalCount ?? listings.length;
+  let activeFilters = 0;
+  searchParams.forEach((value) => {
+    if (value.trim()) activeFilters += 1;
+  });
 
   function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -166,26 +183,33 @@ export function PublicRentalsPage() {
     <main className="pb-16">
       <section className="relative overflow-hidden bg-primary text-white">
         <img alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" src={heroImage} />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/55 via-primary/80 to-primary" />
-        <div className="relative mx-auto grid min-h-[400px] w-full max-w-7xl items-end gap-8 px-4 pb-10 pt-16 sm:min-h-[520px] sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/50 via-primary/82 to-primary" />
+        <div className="relative mx-auto grid min-h-[440px] w-full max-w-7xl items-end gap-8 px-4 pb-10 pt-16 sm:min-h-[540px] sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
           <div className="max-w-3xl text-right">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold text-secondary-fixed backdrop-blur-md">
               <Home className="h-4 w-4" />
-              سوق إيجارات السبحي
+              {publicRentalBrand.marketplaceLabel}
             </span>
             <h1 className="mt-5 text-4xl font-black leading-[1.25] sm:text-5xl lg:text-6xl">
-              وحدات للإيجار داخل كمباوند السبحي
+              وحدات مختارة للإيجار داخل كمباوند السبحي
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-9 text-primary-fixed">
-              تصفح الوحدات المنشورة من إدارة الكمباوند، راجع المواصفات والأسعار، وابدأ طلب التواصل أو الحجز من خلال تدفقات دفع آمنة تعتمد على تأكيد الخادم.
+              تصفح الوحدات المنشورة، قارن السعر والمساحة والتجهيز، وابدأ طلب التواصل أو الحجز من خلال تدفقات دفع آمنة لا تعتمد على حالة المتصفح.
             </p>
+            <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold text-primary-fixed">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-md">
+                <ShieldCheck className="h-4 w-4 text-secondary-fixed" />
+                بيانات المالك محمية حتى تأكيد الدفع
+              </span>
+              <span className="rounded-full bg-white/10 px-4 py-2 backdrop-blur-md">بحث سريع حسب السعر والمواصفات</span>
+            </div>
           </div>
 
           <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 text-right shadow-2xl shadow-black/20 backdrop-blur-xl">
             <p className="text-sm font-bold text-secondary-fixed">الوحدات المتاحة الآن</p>
             <p className="mt-2 text-5xl font-black">{new Intl.NumberFormat('ar-EG').format(totalCount)}</p>
             <p className="mt-3 text-sm leading-7 text-primary-fixed-dim">
-              بيانات التواصل لا تظهر إلا بعد تحقق الدفع من واجهة الخادم. لا توجد مدفوعات وهمية أو تأكيدات من المتصفح.
+              جميع طلبات فتح التواصل والحجز تمر عبر الخادم. لا نعرض بيانات المالك ولا نؤكد الحجز من الواجهة فقط.
             </p>
           </div>
         </div>
@@ -193,9 +217,12 @@ export function PublicRentalsPage() {
 
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <form className="rounded-[28px] border border-outline-variant/60 bg-white p-4 shadow-xl shadow-primary/5 lg:p-5" onSubmit={handleFilterSubmit}>
-          <div className="mb-4 flex items-center gap-2 text-right text-primary">
-            <Filter className="h-5 w-5" />
-            <h2 className="text-lg font-extrabold">تصفية الوحدات</h2>
+          <div className="mb-4 flex flex-col gap-2 text-right text-primary sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              <h2 className="text-lg font-extrabold">تصفية الوحدات</h2>
+            </div>
+            {activeFilters > 0 && <span className="text-xs font-bold text-secondary">{activeFilters} فلتر نشط</span>}
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
             <label className="xl:col-span-2">
@@ -222,8 +249,8 @@ export function PublicRentalsPage() {
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
-            <input className="rounded-2xl border-outline-variant bg-surface-container-low py-3 text-right focus:border-secondary focus:ring-secondary/20" defaultValue={searchParams.get('minRent') ?? ''} min="0" name="minRent" placeholder="أقل سعر" type="number" />
-            <input className="rounded-2xl border-outline-variant bg-surface-container-low py-3 text-right focus:border-secondary focus:ring-secondary/20" defaultValue={searchParams.get('maxRent') ?? ''} min="0" name="maxRent" placeholder="أعلى سعر" type="number" />
+            <input className="rounded-2xl border-outline-variant bg-surface-container-low py-3 text-right focus:border-secondary focus:ring-secondary/20" defaultValue={searchParams.get('minRent') ?? ''} min="0" name="minRent" placeholder="أقل سعر شهري" type="number" />
+            <input className="rounded-2xl border-outline-variant bg-surface-container-low py-3 text-right focus:border-secondary focus:ring-secondary/20" defaultValue={searchParams.get('maxRent') ?? ''} min="0" name="maxRent" placeholder="أعلى سعر شهري" type="number" />
             <input className="rounded-2xl border-outline-variant bg-surface-container-low py-3 text-right focus:border-secondary focus:ring-secondary/20" defaultValue={searchParams.get('bedrooms') ?? ''} min="0" name="bedrooms" placeholder="الغرف" type="number" />
           </div>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -248,15 +275,15 @@ export function PublicRentalsPage() {
           <p className="text-sm font-bold text-on-surface-variant">
             {listingsQuery.isFetching ? 'جار تحديث النتائج...' : `${new Intl.NumberFormat('ar-EG').format(totalCount)} نتيجة`}
           </p>
-          <h2 className="text-2xl font-black text-primary">الوحدات المنشورة</h2>
+          <h2 className="text-2xl font-black text-primary">وحدات متاحة للإيجار</h2>
         </div>
 
         {listingsQuery.isLoading && <LoadingGrid />}
 
         {listingsQuery.isError && (
           <div className="rounded-[28px] border border-error/25 bg-error-container/40 p-6 text-right shadow-lg shadow-error/5">
-            <h3 className="text-xl font-black text-error">تعذر تحميل الإيجارات</h3>
-            <p className="mt-2 text-sm leading-7 text-error">راجع اتصال الإنترنت ثم حاول مرة أخرى. إذا استمرت المشكلة فربما تكون خدمة الإيجارات غير متاحة مؤقتا.</p>
+            <h3 className="text-xl font-black text-error">تعذر تحميل سوق الإيجارات</h3>
+            <p className="mt-2 text-sm leading-7 text-error">الخدمة لم ترجع بيانات الوحدات حاليا. راجع اتصال الإنترنت أو حاول مرة أخرى بعد لحظات.</p>
             <button className="mt-4 rounded-full bg-error px-5 py-3 text-sm font-bold text-white" type="button" onClick={() => listingsQuery.refetch()}>
               إعادة المحاولة
             </button>
@@ -268,8 +295,11 @@ export function PublicRentalsPage() {
             <Building2 className="mx-auto h-12 w-12 text-secondary" />
             <h3 className="mt-4 text-2xl font-black text-primary">لا توجد وحدات منشورة حاليا</h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-on-surface-variant">
-              لم يتم العثور على وحدات مطابقة للفلاتر الحالية. جرب تعديل البحث أو العودة لاحقا بعد نشر وحدات جديدة.
+              لم نجد وحدات تطابق الفلاتر الحالية داخل كمباوند السبحي. جرب إزالة بعض الفلاتر أو العودة لاحقا بعد نشر وحدات جديدة.
             </p>
+            <Link className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-bold text-white" to={ROUTES.RENTALS}>
+              عرض كل الوحدات
+            </Link>
           </div>
         )}
 

@@ -5,15 +5,15 @@ import { ROUTES } from '../../lib/constants/routes';
 export function PublicRentalShell() {
   return (
     <div className="min-h-dvh bg-background text-on-background">
-      <header className="sticky top-0 z-40 border-b border-outline-variant/50 bg-white/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-outline-variant/50 bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link className="flex items-center gap-3" to={ROUTES.RENTALS}>
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/15">
               <Building2 className="h-5 w-5" />
             </span>
             <div className="text-right">
-              <p className="text-sm font-bold text-primary">إيجارات كمباوند السبحي</p>
-              <p className="hidden text-xs text-on-surface-variant sm:block">سوق الإيجارات داخل كمباوند السبحي</p>
+              <p className="text-sm font-black text-primary">إيجارات كمباوند السبحي</p>
+              <p className="hidden text-xs font-medium text-on-surface-variant sm:block">سوق الإيجارات داخل كمباوند السبحي</p>
             </div>
           </Link>
 
@@ -21,7 +21,7 @@ export function PublicRentalShell() {
             <Link className="hidden rounded-full px-4 py-2 hover:bg-surface-container-low sm:inline-flex" to={ROUTES.LOGIN}>
               دخول السكان
             </Link>
-            <Link className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-white shadow-lg shadow-secondary/15" to={ROUTES.RENTALS}>
+            <Link className="inline-flex min-h-10 items-center gap-2 rounded-full bg-secondary px-4 py-2 text-white shadow-lg shadow-secondary/15" to={ROUTES.RENTALS}>
               <Home className="h-4 w-4" />
               الإيجارات
             </Link>
