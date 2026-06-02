@@ -162,6 +162,16 @@ export function PublicRentalDetailPage() {
   );
   const compoundName = publicCompoundName(listing.compound?.name);
   const isReservationPending = reservationMutation.isPending || isSubmitting;
+  const unitFacts = [
+    { label: 'الغرف', value: `${listing.bedrooms}`, icon: BedDouble },
+    { label: 'الحمامات', value: `${listing.bathrooms}`, icon: Bath },
+    { label: 'المساحة', value: `${new Intl.NumberFormat('ar-EG').format(toNumber(listing.areaSqm))} م²`, icon: Ruler },
+  ];
+  const pricingItems = [
+    { label: 'التأمين', value: listing.depositAmount ? formatRentalMoney(listing.depositAmount) : 'غير محدد' },
+    { label: 'فتح التواصل', value: formatRentalMoney(listing.contactUnlockFee) },
+    { label: 'الحجز المؤقت', value: formatRentalMoney(listing.reservationFee) },
+  ];
 
   const onReservationSubmit = handleSubmit(async (values) => {
     setReservationNotice(null);
@@ -169,75 +179,98 @@ export function PublicRentalDetailPage() {
   });
 
   return (
-    <main className="pb-16">
-      <section className="bg-white">
-        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] lg:px-8">
-          <div>
-            <Link className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-primary" to={ROUTES.RENTALS}>
-              <ChevronRight className="h-5 w-5" />
-              رجوع إلى الإيجارات
-            </Link>
-            <div className="overflow-hidden rounded-[32px] bg-surface-container-low shadow-2xl shadow-primary/10">
-              <img alt={title} className="aspect-[16/11] w-full object-cover lg:aspect-[16/9]" src={mainImage(listing)} />
+    <main className="bg-background pb-16">
+      <section className="border-b border-outline-variant/50 bg-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+          <Link className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-full px-1 text-sm font-bold text-primary hover:text-secondary" to={ROUTES.RENTALS}>
+            <ChevronRight className="h-5 w-5" />
+            رجوع إلى الإيجارات
+          </Link>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
+            <div className="min-w-0 space-y-4">
+              <div className="relative overflow-hidden rounded-[32px] bg-surface-container-low shadow-2xl shadow-primary/10">
+                <img alt={title} className="aspect-[4/3] w-full object-cover sm:aspect-[16/10] lg:aspect-[16/8.5]" src={mainImage(listing)} />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 via-primary/25 to-transparent p-5 text-white sm:p-7">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-secondary shadow-md">{listingStatusLabels[listing.status]}</span>
+                    <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">{listingTypeLabels[listing.listingType]}</span>
+                    <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">{furnishingLabels[listing.furnishingStatus]}</span>
+                  </div>
+                  <h1 className="mt-3 max-w-4xl text-2xl font-black leading-[1.35] sm:text-4xl lg:text-5xl">{title}</h1>
+                  <p className="mt-2 flex max-w-3xl items-center gap-2 text-sm text-primary-fixed sm:text-base">
+                    <MapPin className="h-5 w-5 shrink-0 text-secondary-fixed" />
+                    {location}
+                  </p>
+                </div>
+              </div>
+
+              {gallery.length > 1 && (
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                  {gallery.slice(0, 4).map((image) => (
+                    <img
+                      key={image.id}
+                      alt={publicRentalText(image.altText, title)}
+                      className="aspect-[4/3] rounded-2xl border border-outline-variant/50 object-cover shadow-sm"
+                      src={image.url}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            {gallery.length > 1 && (
-              <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {gallery.slice(0, 4).map((image) => (
-                  <img key={image.id} alt={publicRentalText(image.altText, title)} className="aspect-[4/3] rounded-2xl object-cover" src={image.url} />
+
+            <aside className="self-start rounded-[32px] border border-outline-variant/60 bg-white p-5 text-right shadow-2xl shadow-primary/10 xl:sticky xl:top-24 xl:p-6">
+              <div className="rounded-[26px] bg-primary p-5 text-white">
+                <p className="text-sm font-bold text-primary-fixed-dim">الإيجار الشهري</p>
+                <p className="mt-1 text-4xl font-black leading-tight">{formatRentalMoney(listing.monthlyRent)}</p>
+                <p className="mt-3 text-sm leading-7 text-primary-fixed">
+                  لوحة الحجز تعرض الرسوم فقط. التأكيد وفتح بيانات المالك يتمان عبر الخادم.
+                </p>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {unitFacts.map((fact) => {
+                  const Icon = fact.icon;
+                  return (
+                    <div key={fact.label} className="rounded-2xl bg-surface-container-low px-2 py-3 text-center">
+                      <Icon className="mx-auto mb-1 h-5 w-5 text-primary" />
+                      <p className="text-xs font-bold text-on-surface-variant">{fact.label}</p>
+                      <p className="mt-1 text-sm font-black text-primary">{fact.value}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 space-y-2 rounded-[24px] border border-outline-variant/60 p-4">
+                {pricingItems.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-4 text-sm">
+                    <span className="font-bold text-on-surface-variant">{item.label}</span>
+                    <span className="font-black text-primary">{item.value}</span>
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
 
-          <aside className="self-start rounded-[32px] border border-outline-variant/60 bg-background p-5 text-right shadow-xl shadow-primary/5 lg:sticky lg:top-24">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-bold text-secondary">{listingStatusLabels[listing.status]}</span>
-              <span className="rounded-full bg-primary/5 px-3 py-1 text-sm font-bold text-primary">{listingTypeLabels[listing.listingType]}</span>
-            </div>
-            <h1 className="mt-4 text-3xl font-black leading-[1.35] text-primary">{title}</h1>
-            <p className="mt-3 flex items-center gap-2 text-on-surface-variant">
-              <MapPin className="h-5 w-5 shrink-0 text-secondary" />
-              {location}
-            </p>
-            <div className="mt-6 rounded-[24px] bg-white p-4">
-              <p className="text-sm font-bold text-on-surface-variant">الإيجار الشهري</p>
-              <p className="mt-1 text-4xl font-black text-primary">{formatRentalMoney(listing.monthlyRent)}</p>
-              {listing.depositAmount && <p className="mt-2 text-sm text-on-surface-variant">التأمين: {formatRentalMoney(listing.depositAmount)}</p>}
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-2xl bg-surface-container-low p-3">
-                  <p className="text-on-surface-variant">فتح التواصل</p>
-                  <p className="font-black text-primary">{formatRentalMoney(listing.contactUnlockFee)}</p>
-                </div>
-                <div className="rounded-2xl bg-surface-container-low p-3">
-                  <p className="text-on-surface-variant">الحجز المؤقت</p>
-                  <p className="font-black text-primary">{formatRentalMoney(listing.reservationFee)}</p>
-                </div>
+              <div className="mt-5 space-y-3">
+                <Link className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-base font-black text-white shadow-xl shadow-primary/15" to={`/rentals/${listing.slug}/contact`}>
+                  <LockKeyhole className="h-5 w-5" />
+                  فتح بيانات التواصل
+                </Link>
+                <button className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-4 text-base font-black text-white shadow-xl shadow-secondary/15" type="button" onClick={() => setShowReservationForm((value) => !value)}>
+                  <CalendarClock className="h-5 w-5" />
+                  بدء حجز مؤقت
+                </button>
               </div>
-            </div>
-            <div className="mt-5 grid grid-cols-3 gap-2 text-center text-sm">
-              <span className="rounded-2xl bg-white px-2 py-3 text-on-surface-variant"><BedDouble className="mx-auto mb-1 h-5 w-5 text-primary" />{listing.bedrooms} غرف</span>
-              <span className="rounded-2xl bg-white px-2 py-3 text-on-surface-variant"><Bath className="mx-auto mb-1 h-5 w-5 text-primary" />{listing.bathrooms} حمام</span>
-              <span className="rounded-2xl bg-white px-2 py-3 text-on-surface-variant"><Ruler className="mx-auto mb-1 h-5 w-5 text-primary" />{new Intl.NumberFormat('ar-EG').format(toNumber(listing.areaSqm))} م²</span>
-            </div>
-            <div className="mt-6 space-y-3">
-              <Link className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-base font-black text-white shadow-xl shadow-primary/15" to={`/rentals/${listing.slug}/contact`}>
-                <LockKeyhole className="h-5 w-5" />
-                فتح بيانات التواصل
-              </Link>
-              <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-4 text-base font-black text-white shadow-xl shadow-secondary/15" type="button" onClick={() => setShowReservationForm((value) => !value)}>
-                <CalendarClock className="h-5 w-5" />
-                بدء حجز مؤقت
-              </button>
-            </div>
-            <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-on-surface-variant">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
-              بيانات المالك لا تظهر من صفحة التفاصيل، ولا يتم تأكيد فتح التواصل أو الحجز إلا بعد تحقق الدفع من الخادم.
-            </p>
-          </aside>
+
+              <p className="mt-4 flex items-start gap-2 rounded-2xl bg-secondary/10 p-3 text-xs leading-6 text-secondary">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                لا تظهر بيانات المالك ولا يتم تأكيد الحجز إلا بعد تحقق الدفع من الخادم.
+              </p>
+            </aside>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:px-8">
+      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-6">
           <section className="rounded-[28px] border border-outline-variant/60 bg-white p-6 text-right shadow-xl shadow-primary/5">
             <h2 className="text-2xl font-black text-primary">وصف الوحدة</h2>
