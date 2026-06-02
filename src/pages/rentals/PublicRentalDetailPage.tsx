@@ -177,7 +177,7 @@ export function PublicRentalDetailPage() {
             <h1 className="mt-4 text-3xl font-black leading-[1.35] text-primary">{listing.title}</h1>
             <p className="mt-3 flex items-center gap-2 text-on-surface-variant">
               <MapPin className="h-5 w-5 shrink-0 text-secondary" />
-              {listing.locationText ?? listing.addressText ?? listing.compound?.address ?? 'Black Horse Compound'}
+              {listing.locationText ?? listing.addressText ?? listing.compound?.address ?? 'Sebahi Compound'}
             </p>
             <div className="mt-6 rounded-[24px] bg-white p-4">
               <p className="text-sm font-bold text-on-surface-variant">الإيجار الشهري</p>
@@ -269,7 +269,7 @@ export function PublicRentalDetailPage() {
 
           <section className="rounded-[28px] border border-outline-variant/60 bg-white p-5 text-right shadow-xl shadow-primary/5">
             <h2 className="text-xl font-black text-primary">الموقع والكمباوند</h2>
-            <p className="mt-3 text-sm leading-7 text-on-surface-variant">{listing.compound?.name ?? 'Black Horse Compound'}</p>
+            <p className="mt-3 text-sm leading-7 text-on-surface-variant">{listing.compound?.name ?? 'Sebahi Compound'}</p>
             <p className="mt-1 text-sm leading-7 text-on-surface-variant">{listing.addressText ?? listing.compound?.address ?? 'New Cairo, Egypt'}</p>
           </section>
         </div>

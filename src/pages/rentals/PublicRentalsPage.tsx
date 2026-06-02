@@ -65,7 +65,7 @@ function RentalListingCard({ listing }: { listing: RentalListing }) {
 
       <div className="space-y-4 p-5 text-right">
         <div>
-          <p className="text-sm font-bold text-secondary">{listing.compound?.name ?? 'Black Horse Compound'}</p>
+          <p className="text-sm font-bold text-secondary">{listing.compound?.name ?? 'Sebahi Compound'}</p>
           <Link className="mt-1 block text-xl font-bold leading-8 text-primary hover:text-secondary" to={`/rentals/${listing.slug}`}>
             {listing.title}
           </Link>
@@ -171,10 +171,10 @@ export function PublicRentalsPage() {
           <div className="max-w-3xl text-right">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold text-secondary-fixed backdrop-blur-md">
               <Home className="h-4 w-4" />
-              Black Horse Rental Marketplace
+              سوق إيجارات السبحي
             </span>
             <h1 className="mt-5 text-4xl font-black leading-[1.25] sm:text-5xl lg:text-6xl">
-              وحدات للإيجار داخل بلاك هورس
+              وحدات للإيجار داخل كمباوند السبحي
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-9 text-primary-fixed">
               تصفح الوحدات المنشورة من إدارة الكمباوند، راجع المواصفات والأسعار، وابدأ طلب التواصل أو الحجز من خلال تدفقات دفع آمنة تعتمد على تأكيد الخادم.
