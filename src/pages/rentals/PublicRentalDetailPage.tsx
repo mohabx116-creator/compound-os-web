@@ -5,6 +5,7 @@ import {
   Bath,
   BedDouble,
   Building2,
+  CalendarCheck,
   CalendarClock,
   CheckCircle2,
   ChevronRight,
@@ -14,10 +15,11 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
+import { RentalInquiryForm } from '../../components/rentals/RentalInquiryForm';
 import { ApiClientError } from '../../lib/api/api-client';
 import { rentalApiService } from '../../lib/api/rental-service';
 import type { RentalListing } from '../../lib/api/types';
@@ -94,7 +96,9 @@ function DetailError({ title, message }: { title: string; message: string }) {
 export function PublicRentalDetailPage() {
   const { slug } = useParams();
   const [showReservationForm, setShowReservationForm] = useState(false);
+  const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [reservationNotice, setReservationNotice] = useState<{ type: 'pending' | 'ready'; message: string; href?: string } | null>(null);
+  const inquiryFormRef = useRef<HTMLDivElement>(null);
 
   const listingQuery = useQuery({
     queryKey: ['rentals', 'public', 'listing', slug],
@@ -195,6 +199,13 @@ export function PublicRentalDetailPage() {
     await reservationMutation.mutateAsync({ listingId: listing.id, values });
   });
 
+  function revealInquiryForm() {
+    setShowInquiryForm(true);
+    window.requestAnimationFrame(() => {
+      inquiryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   return (
     <main className="bg-background pb-16">
       <section className="border-b border-outline-variant/50 bg-white">
@@ -289,6 +300,10 @@ export function PublicRentalDetailPage() {
               </div>
 
               <div className="mt-5 space-y-3">
+                <button className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-4 text-base font-black text-white shadow-xl shadow-secondary/15" type="button" onClick={revealInquiryForm}>
+                  <CalendarCheck className="h-5 w-5" />
+                  طلب معاينة
+                </button>
                 <Link className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-base font-black text-white shadow-xl shadow-primary/15" to={`/rentals/${listing.slug}/contact`}>
                   <LockKeyhole className="h-5 w-5" />
                   فتح بيانات التواصل
@@ -340,6 +355,28 @@ export function PublicRentalDetailPage() {
         </div>
 
         <div className="space-y-6">
+          <div ref={inquiryFormRef}>
+            {showInquiryForm ? (
+              <RentalInquiryForm
+                listingId={listing.id}
+                listingTitle={title}
+                intro="يمكنك طلب معاينة الوحدة الآن بدون تسجيل دخول وبدون دفع. سيصل الطلب إلى إدارة كمباوند السبحي للمتابعة."
+              />
+            ) : (
+              <section className="rounded-[28px] border border-secondary/20 bg-secondary/10 p-5 text-right">
+                <CalendarCheck className="h-6 w-6 text-secondary" />
+                <h2 className="mt-3 text-xl font-black text-primary">تريد معاينة الوحدة أولًا؟</h2>
+                <p className="mt-2 text-sm leading-7 text-on-surface-variant">
+                  أرسل طلب معاينة للإدارة بدون دفع أو فتح بيانات المالك. الطلب يصل لفريق كمباوند السبحي لمتابعته من لوحة الإدارة.
+                </p>
+                <button className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-3 text-sm font-black text-white shadow-lg shadow-secondary/15" type="button" onClick={revealInquiryForm}>
+                  طلب معاينة
+                  <CalendarCheck className="h-4 w-4" />
+                </button>
+              </section>
+            )}
+          </div>
+
           {showReservationForm && (
             <form className="rounded-[28px] border border-secondary/20 bg-white p-5 text-right shadow-xl shadow-secondary/10" onSubmit={onReservationSubmit}>
               <h2 className="text-xl font-black text-primary">بيانات الحجز المؤقت</h2>

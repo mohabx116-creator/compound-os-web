@@ -176,6 +176,18 @@ export const rentalReservationStatuses = [
 ] as const;
 export type RentalReservationStatus = (typeof rentalReservationStatuses)[number];
 
+export const rentalInquiryTypes = ['VIEWING_REQUEST', 'GENERAL'] as const;
+export type RentalInquiryType = (typeof rentalInquiryTypes)[number];
+
+export const rentalInquiryStatuses = [
+  'NEW',
+  'CONTACT_UNLOCKED',
+  'VIEWING_REQUESTED',
+  'CLOSED',
+  'CANCELLED',
+] as const;
+export type RentalInquiryStatus = (typeof rentalInquiryStatuses)[number];
+
 export const rentalPaymentStatuses = [
   'INITIATED',
   'PENDING',
@@ -260,6 +272,19 @@ export interface StartContactUnlockInput {
 }
 
 export type StartReservationInput = StartContactUnlockInput;
+
+export interface CreateRentalInquiryInput {
+  tenantName: string;
+  tenantPhone: string;
+  tenantEmail?: string;
+  message?: string;
+  inquiryType?: RentalInquiryType;
+}
+
+export interface RentalInquiryPublicResponse {
+  id: string;
+  status: RentalInquiryStatus;
+}
 
 export interface RentalPaymentSummary {
   id: string;

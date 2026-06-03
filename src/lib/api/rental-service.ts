@@ -1,6 +1,8 @@
 import { getApiData, postApiData } from './api-client';
 import type {
   ContactAccessResponse,
+  CreateRentalInquiryInput,
+  RentalInquiryPublicResponse,
   RentalListing,
   RentalListingQuery,
   RentalReservation,
@@ -17,6 +19,17 @@ export async function getPublicRentalListings(query?: RentalListingQuery) {
 
 export async function getPublicRentalListingBySlug(slug: string): Promise<RentalListing> {
   const response = await getApiData<RentalListing>(`/rentals/listings/${slug}`);
+  return response.data;
+}
+
+export async function createRentalInquiry(
+  listingId: string,
+  input: CreateRentalInquiryInput,
+): Promise<RentalInquiryPublicResponse> {
+  const response = await postApiData<RentalInquiryPublicResponse>(
+    `/rentals/listings/${listingId}/inquiries`,
+    input,
+  );
   return response.data;
 }
 
@@ -61,6 +74,7 @@ export async function getRentalReservation(id: string): Promise<RentalReservatio
 export const rentalApiService = {
   getPublicRentalListings,
   getPublicRentalListingBySlug,
+  createRentalInquiry,
   startContactUnlock,
   getContactAccess,
   startRentalReservation,

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Building2,
+  CalendarCheck,
   CheckCircle2,
   ChevronRight,
   CreditCard,
@@ -20,6 +21,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
+import { RentalInquiryForm } from '../../components/rentals/RentalInquiryForm';
 import { ApiClientError } from '../../lib/api/api-client';
 import { rentalApiService } from '../../lib/api/rental-service';
 import type { ContactAccessResponse, StartContactUnlockResponse } from '../../lib/api/types';
@@ -342,6 +344,23 @@ export function PublicRentalContactPage() {
                 </button>
               </form>
             </div>
+
+            <section className="rounded-[32px] border border-secondary/20 bg-white p-5 text-right shadow-xl shadow-secondary/10 sm:p-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-4 py-2 text-sm font-black text-secondary">
+                <CalendarCheck className="h-4 w-4" />
+                بديل آمن بدون دفع
+              </span>
+              <h2 className="mt-4 text-2xl font-black leading-9 text-primary">أرسل طلب معاينة للإدارة</h2>
+              <p className="mt-2 text-sm leading-7 text-on-surface-variant">
+                بدل فتح بيانات التواصل الآن، يمكنك إرسال طلب معاينة للإدارة وسيتواصل معك فريق كمباوند السبحي لمتابعة الطلب.
+              </p>
+            </section>
+
+            <RentalInquiryForm
+              listingId={listing.id}
+              listingTitle={title}
+              intro="هذا الطلب لا يفتح بيانات المالك ولا يبدأ أي دفع. فريق كمباوند السبحي يستلم الطلب ويراجعه للمتابعة."
+            />
 
             {ownerContact && (
               <section className="rounded-[32px] border border-secondary/30 bg-secondary/10 p-5 text-right shadow-xl shadow-secondary/10 sm:p-6">
