@@ -12,6 +12,7 @@ import {
   MapPin,
   Ruler,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -25,15 +26,16 @@ import {
   formatRentalDate,
   formatRentalMoney,
   furnishingLabels,
+  getListingCoverImage,
+  getListingImageAlt,
   listingStatusLabels,
   listingTypeLabels,
   publicCompoundName,
   publicRentalBrand,
   publicRentalText,
+  sortListingImages,
   toNumber,
 } from './rental-format';
-
-const fallbackImage = 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1400';
 
 const visitorSchema = z.object({
   tenantName: z.string().trim().min(2, 'اكتب الاسم بالكامل'),
@@ -43,10 +45,6 @@ const visitorSchema = z.object({
 
 type VisitorFormValues = z.infer<typeof visitorSchema>;
 
-function mainImage(listing: RentalListing) {
-  return listing.images.find((image) => image.isCover)?.url ?? listing.images[0]?.url ?? fallbackImage;
-}
-
 function optionalAmenities(listing: RentalListing) {
   const value = (listing as RentalListing & { amenities?: unknown; features?: unknown }).amenities
     ?? (listing as RentalListing & { features?: unknown }).features;
@@ -54,6 +52,24 @@ function optionalAmenities(listing: RentalListing) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
     : [];
+}
+
+function DetailImageFallback({ title }: { title: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col justify-between overflow-hidden bg-primary p-6 text-white sm:p-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(201,169,97,0.4),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.14),transparent_42%)]" />
+      <div className="relative flex h-full flex-col justify-between">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-black text-secondary-fixed backdrop-blur-md">
+          <Building2 className="h-4 w-4" />
+          {publicRentalBrand.rentalsTitle}
+        </span>
+        <div className="max-w-2xl">
+          <p className="text-sm font-bold text-primary-fixed">كمباوند السبحي</p>
+          <p className="mt-2 text-3xl font-black leading-[1.35] sm:text-5xl">{title}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function isPaymentProviderPending(error: unknown) {
@@ -145,14 +161,15 @@ export function PublicRentalDetailPage() {
   if (listingQuery.isError || !listingQuery.data) {
     return (
       <DetailError
-        title="الوحدة غير موجودة أو لم تعد متاحة"
-        message="قد تكون الوحدة أزيلت من السوق أو انتهت مدة نشرها. يمكنك الرجوع إلى قائمة الوحدات المتاحة."
+        title="الوحدة غير موجودة أو تم تحديث رابطها"
+        message="الوحدة غير موجودة أو تم تحديث رابطها. يمكنك الرجوع إلى قائمة الوحدات المتاحة واختيار الرابط الحالي من السوق."
       />
     );
   }
 
   const listing = listingQuery.data;
-  const gallery = listing.images.length ? listing.images : [{ id: 'fallback', url: fallbackImage, altText: listing.title, sortOrder: 0, isCover: true }];
+  const coverImage = getListingCoverImage(listing);
+  const gallery = sortListingImages(listing);
   const amenities = optionalAmenities(listing);
   const title = publicRentalText(listing.title);
   const description = publicRentalText(listing.description);
@@ -190,10 +207,28 @@ export function PublicRentalDetailPage() {
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
             <div className="min-w-0 space-y-4">
               <div className="relative overflow-hidden rounded-[32px] bg-surface-container-low shadow-2xl shadow-primary/10">
-                <img alt={title} className="aspect-[4/3] w-full object-cover sm:aspect-[16/10] lg:aspect-[16/8.5]" src={mainImage(listing)} />
+                <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/8.5]">
+                  <DetailImageFallback title={title} />
+                  {coverImage && (
+                    <img
+                      alt={getListingImageAlt(listing, coverImage)}
+                      className="relative h-full w-full object-cover"
+                      src={coverImage.url}
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
+                </div>
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/80 via-primary/25 to-transparent p-5 text-white sm:p-7">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-secondary shadow-md">{listingStatusLabels[listing.status]}</span>
+                    {listing.isFeatured && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-white shadow-md">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        مميز
+                      </span>
+                    )}
                     <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">{listingTypeLabels[listing.listingType]}</span>
                     <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">{furnishingLabels[listing.furnishingStatus]}</span>
                   </div>
@@ -210,9 +245,12 @@ export function PublicRentalDetailPage() {
                   {gallery.slice(0, 4).map((image) => (
                     <img
                       key={image.id}
-                      alt={publicRentalText(image.altText, title)}
+                      alt={getListingImageAlt(listing, image)}
                       className="aspect-[4/3] rounded-2xl border border-outline-variant/50 object-cover shadow-sm"
                       src={image.url}
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none';
+                      }}
                     />
                   ))}
                 </div>

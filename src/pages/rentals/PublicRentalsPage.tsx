@@ -9,6 +9,8 @@ import { cn } from '../../lib/utils/cn';
 import {
   formatRentalMoney,
   furnishingLabels,
+  getListingCoverImage,
+  getListingImageAlt,
   listingStatusLabels,
   listingTypeLabels,
   publicCompoundName,
@@ -38,27 +40,56 @@ function buildQuery(searchParams: URLSearchParams): RentalListingQuery {
   };
 }
 
-function listingCover(listing: RentalListing) {
-  return listing.images.find((image) => image.isCover)?.url ?? listing.images[0]?.url ?? heroImage;
+function ListingImageFallback({ title }: { title: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col justify-between overflow-hidden bg-primary p-5 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,169,97,0.42),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.12),transparent_38%)]" />
+      <div className="relative flex h-full flex-col justify-between">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-secondary-fixed backdrop-blur-md">
+          <Home className="h-4 w-4" />
+          {publicRentalBrand.marketplaceLabel}
+        </span>
+        <div>
+          <p className="text-sm font-bold text-primary-fixed">كمباوند السبحي</p>
+          <p className="mt-2 text-2xl font-black leading-9">{title}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function RentalListingCard({ listing }: { listing: RentalListing }) {
+  const coverImage = getListingCoverImage(listing);
   const title = publicRentalText(listing.title);
   const location = publicRentalText(
     listing.locationText ?? listing.addressText ?? listing.compound?.address,
     publicRentalBrand.compoundAr,
   );
   const compoundName = publicCompoundName(listing.compound?.name);
+  const depositAmount = toNumber(listing.depositAmount);
 
   return (
-    <article className="group overflow-hidden rounded-[28px] border border-outline-variant/50 bg-white shadow-xl shadow-primary/5 transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
+    <article
+      className={cn(
+        'group overflow-hidden rounded-[28px] border bg-white transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10',
+        listing.isFeatured
+          ? 'border-secondary/45 shadow-2xl shadow-secondary/15 ring-1 ring-secondary/20'
+          : 'border-outline-variant/50 shadow-xl shadow-primary/5'
+      )}
+    >
       <Link className="block" to={`/rentals/${listing.slug}`}>
         <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
-          <img
-            alt={publicRentalText(listing.images[0]?.altText, title)}
-            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-            src={listingCover(listing)}
-          />
+          <ListingImageFallback title={title} />
+          {coverImage && (
+            <img
+              alt={getListingImageAlt(listing, coverImage)}
+              className="relative h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+              src={coverImage.url}
+              onError={(event) => {
+                event.currentTarget.style.display = 'none';
+              }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-primary/65 via-transparent to-transparent opacity-80" />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
             <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-secondary shadow-md">
@@ -67,7 +98,7 @@ function RentalListingCard({ listing }: { listing: RentalListing }) {
             {listing.isFeatured && (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-white shadow-md">
                 <Sparkles className="h-3.5 w-3.5" />
-                مميزة
+                مميز
               </span>
             )}
           </div>
@@ -116,8 +147,8 @@ function RentalListingCard({ listing }: { listing: RentalListing }) {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="text-right">
-            <p className="text-xs font-bold text-on-surface-variant">رسوم فتح التواصل</p>
-            <p className="text-base font-extrabold text-primary">{formatRentalMoney(listing.contactUnlockFee)}</p>
+            <p className="text-xs font-bold text-on-surface-variant">التأمين</p>
+            <p className="text-base font-extrabold text-primary">{depositAmount > 0 ? formatRentalMoney(depositAmount) : 'غير محدد'}</p>
           </div>
         </div>
       </div>
@@ -156,6 +187,7 @@ export function PublicRentalsPage() {
   });
 
   const listings = listingsQuery.data?.data ?? [];
+  const visibleListings = [...listings].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured));
   const totalCount = listingsQuery.data?.meta?.totalCount ?? listings.length;
   let activeFilters = 0;
   searchParams.forEach((value) => {
@@ -303,19 +335,19 @@ export function PublicRentalsPage() {
           </div>
         )}
 
-        {listings.length > 0 && (
+        {visibleListings.length > 0 && (
           <div
             className={cn(
               'grid gap-6 w-full',
-              listings.length === 1
-                ? 'grid-cols-1 max-w-[420px] mx-auto md:ms-0 md:me-auto'
-                : listings.length === 2
-                ? 'grid-cols-1 md:grid-cols-2 max-w-[864px] mx-auto md:ms-0 md:me-auto'
+              visibleListings.length === 1
+                ? 'grid-cols-1 max-w-[430px] mx-auto'
+                : visibleListings.length === 2
+                ? 'grid-cols-1 md:grid-cols-2 max-w-[900px] mx-auto'
                 : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 max-w-7xl mx-auto',
               listingsQuery.isFetching && 'opacity-80'
             )}
           >
-            {listings.map((listing) => (
+            {visibleListings.map((listing) => (
               <RentalListingCard key={listing.id} listing={listing} />
             ))}
           </div>

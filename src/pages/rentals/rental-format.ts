@@ -1,5 +1,7 @@
 import type {
   RentalFurnishingStatus,
+  RentalListing,
+  RentalListingImage,
   RentalListingStatus,
   RentalListingType,
   RentalReservationStatus,
@@ -80,16 +82,40 @@ export function shortId(value: string) {
   return value.slice(0, 8);
 }
 
-export function publicRentalText(value: string | null | undefined, fallback = '') {
+export function sanitizeSebahiDisplayText(value: string | null | undefined, fallback = '') {
   if (!value?.trim()) return fallback;
 
   return value
-    .replace(/Black Horse Compound/gi, publicRentalBrand.compoundEn)
-    .replace(/Black Horse/gi, publicRentalBrand.compoundEn)
+    .trim()
+    .replace(/Black Horse Compound/gi, publicRentalBrand.compoundAr)
+    .replace(/Black Horse/gi, publicRentalBrand.compoundAr)
+    .replace(/black-horse/gi, 'sebahi')
     .replace(/Compound OS Demo/gi, publicRentalBrand.compoundAr)
+    .replace(/New Cairo, Egypt/gi, 'القاهرة الجديدة')
     .replace(/بلاك هورس/g, publicRentalBrand.compoundAr);
+}
+
+export function publicRentalText(value: string | null | undefined, fallback = '') {
+  return sanitizeSebahiDisplayText(value, fallback);
 }
 
 export function publicCompoundName(value: string | null | undefined) {
   return publicRentalText(value, publicRentalBrand.compoundAr);
+}
+
+export function sortListingImages(listingOrImages: RentalListing | RentalListingImage[] | null | undefined) {
+  const images = Array.isArray(listingOrImages) ? listingOrImages : listingOrImages?.images;
+
+  return [...(images ?? [])]
+    .filter((image) => image.url.trim().length > 0)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function getListingCoverImage(listing: RentalListing | null | undefined) {
+  const images = sortListingImages(listing);
+  return images.find((image) => image.isCover) ?? images[0] ?? null;
+}
+
+export function getListingImageAlt(listing: RentalListing, image: RentalListingImage | null | undefined) {
+  return publicRentalText(image?.altText, `صورة ${publicRentalText(listing.title, 'وحدة للإيجار في كمباوند السبحي')}`);
 }
