@@ -5,7 +5,7 @@ import { ROUTES } from '../../lib/constants/routes';
 export function PublicRentalShell() {
   return (
     <div className="min-h-dvh bg-background text-on-background">
-      <header className="sticky top-0 z-40 border-b border-outline-variant/50 bg-white/92 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-outline-variant/50 bg-white/96 backdrop-blur-xl shadow-[0_2px_15px_rgba(3,22,53,0.04)]">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link className="flex items-center gap-3" to={ROUTES.RENTALS}>
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/15">
@@ -18,7 +18,7 @@ export function PublicRentalShell() {
           </Link>
 
           <nav className="flex items-center gap-2 text-sm font-bold text-primary">
-            <Link className="hidden rounded-full px-4 py-2 hover:bg-surface-container-low sm:inline-flex" to={ROUTES.LOGIN}>
+            <Link className="hidden rounded-full px-4 py-2 hover:bg-primary/5 transition duration-200 sm:inline-flex" to={ROUTES.LOGIN}>
               دخول السكان
             </Link>
             <Link className="inline-flex min-h-10 items-center gap-2 rounded-full bg-secondary px-4 py-2 text-white shadow-lg shadow-secondary/15" to={ROUTES.RENTALS}>

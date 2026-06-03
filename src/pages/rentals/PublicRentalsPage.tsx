@@ -271,11 +271,11 @@ export function PublicRentalsPage() {
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="mb-6 flex items-center justify-between gap-4 border-b border-outline-variant/50 pb-4">
+          <h2 className="text-2xl font-black text-primary">وحدات متاحة للإيجار</h2>
           <p className="text-sm font-bold text-on-surface-variant">
             {listingsQuery.isFetching ? 'جار تحديث النتائج...' : `${new Intl.NumberFormat('ar-EG').format(totalCount)} نتيجة`}
           </p>
-          <h2 className="text-2xl font-black text-primary">وحدات متاحة للإيجار</h2>
         </div>
 
         {listingsQuery.isLoading && <LoadingGrid />}
@@ -304,7 +304,17 @@ export function PublicRentalsPage() {
         )}
 
         {listings.length > 0 && (
-          <div className={cn('grid gap-5 md:grid-cols-2 xl:grid-cols-3', listingsQuery.isFetching && 'opacity-80')}>
+          <div
+            className={cn(
+              'grid gap-6 w-full',
+              listings.length === 1
+                ? 'grid-cols-1 max-w-[420px] mx-auto md:ms-0 md:me-auto'
+                : listings.length === 2
+                ? 'grid-cols-1 md:grid-cols-2 max-w-[864px] mx-auto md:ms-0 md:me-auto'
+                : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3 max-w-7xl mx-auto',
+              listingsQuery.isFetching && 'opacity-80'
+            )}
+          >
             {listings.map((listing) => (
               <RentalListingCard key={listing.id} listing={listing} />
             ))}
