@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Building2,
+  CalendarCheck,
   CheckCircle2,
   ChevronRight,
   CreditCard,
@@ -13,18 +14,25 @@ import {
   MessageCircle,
   Phone,
   ShieldCheck,
+  Sparkles,
   UserRound,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
+import { RentalInquiryForm } from '../../components/rentals/RentalInquiryForm';
 import { ApiClientError } from '../../lib/api/api-client';
 import { rentalApiService } from '../../lib/api/rental-service';
 import type { ContactAccessResponse, StartContactUnlockResponse } from '../../lib/api/types';
 import { ROUTES } from '../../lib/constants/routes';
 import {
   formatRentalMoney,
+  furnishingLabels,
+  getListingCoverImage,
+  getListingImageAlt,
+  listingStatusLabels,
+  listingTypeLabels,
   publicCompoundName,
   publicRentalBrand,
   publicRentalText,
@@ -67,6 +75,24 @@ function readableContactError(error: unknown) {
 function whatsappHref(phone: string | null | undefined) {
   const digits = phone?.replace(/[^\d]/g, '');
   return digits ? `https://wa.me/${digits}` : null;
+}
+
+function ContactImageFallback({ title }: { title: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col justify-between overflow-hidden bg-primary p-5 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(201,169,97,0.42),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.12),transparent_40%)]" />
+      <div className="relative flex h-full flex-col justify-between">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-black text-secondary-fixed backdrop-blur-md">
+          <LockKeyhole className="h-4 w-4" />
+          فتح بيانات التواصل
+        </span>
+        <div>
+          <p className="text-sm font-bold text-primary-fixed">كمباوند السبحي</p>
+          <p className="mt-2 text-2xl font-black leading-9">{title}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function PublicRentalContactPage() {
@@ -118,13 +144,7 @@ export function PublicRentalContactPage() {
       )
     : publicRentalBrand.compoundAr;
   const compoundName = publicCompoundName(listing?.compound?.name);
-  const coverImage = useMemo(
-    () =>
-      listing?.images.find((image) => image.isCover)?.url ??
-      listing?.images[0]?.url ??
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1200',
-    [listing],
-  );
+  const coverImage = listing ? getListingCoverImage(listing) : null;
   const checkoutUrl = unlockResult?.paymentUrl ?? unlockResult?.payment?.paymentUrl ?? null;
   const ownerContact = access?.unlocked === true ? access.ownerContact : null;
   const whatsappUrl = ownerContact ? whatsappHref(ownerContact.phone) : null;
@@ -181,9 +201,9 @@ export function PublicRentalContactPage() {
     return (
       <main className="rental-luxury mx-auto flex min-h-[70dvh] w-full max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
         <LockKeyhole className="h-14 w-14 text-secondary" />
-        <h1 className="mt-5 text-3xl font-black text-primary">الوحدة غير موجودة أو لم تعد متاحة</h1>
+        <h1 className="mt-5 text-3xl font-black text-primary">الوحدة غير موجودة أو تم تحديث رابطها</h1>
         <p className="mt-3 leading-8 text-on-surface-variant">
-          لا يمكن بدء فتح بيانات التواصل لهذه الوحدة حاليا. يمكنك الرجوع إلى سوق إيجارات السبحي واختيار وحدة أخرى.
+          الوحدة غير موجودة أو تم تحديث رابطها. يمكنك الرجوع إلى سوق إيجارات السبحي واختيار الرابط الحالي من قائمة الوحدات.
         </p>
         <Link className="mt-6 rounded-full bg-primary px-6 py-3 font-bold text-white" to={ROUTES.RENTALS}>
           العودة إلى الإيجارات
@@ -203,12 +223,34 @@ export function PublicRentalContactPage() {
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(420px,1.15fr)] lg:items-start">
           <aside className="space-y-5 lg:sticky lg:top-24">
             <section className="overflow-hidden rounded-[32px] border border-outline-variant/60 bg-white text-right shadow-xl shadow-primary/5">
-              <img alt={`صورة ${title}`} className="aspect-[4/3] w-full object-cover" src={coverImage} />
+              <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
+                <ContactImageFallback title={title} />
+                {coverImage && (
+                  <img
+                    alt={getListingImageAlt(listing, coverImage)}
+                    className="relative h-full w-full object-cover"
+                    src={coverImage.url}
+                    onError={(event) => {
+                      event.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
               <div className="p-5">
-                <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1.5 text-xs font-black text-secondary">
-                  <Building2 className="h-4 w-4" />
-                  {publicRentalBrand.rentalsTitle}
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1.5 text-xs font-black text-secondary">
+                    <Building2 className="h-4 w-4" />
+                    {listingStatusLabels[listing.status]}
+                  </span>
+                  {listing.isFeatured && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-black text-white shadow-sm shadow-secondary/15">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      مميز
+                    </span>
+                  )}
+                  <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-black text-primary">{listingTypeLabels[listing.listingType]}</span>
+                  <span className="rounded-full bg-surface-container-low px-3 py-1.5 text-xs font-black text-primary">{furnishingLabels[listing.furnishingStatus]}</span>
+                </div>
                 <h1 className="mt-4 text-2xl font-black leading-9 text-primary">{title}</h1>
                 <p className="mt-2 flex items-start gap-2 text-sm leading-7 text-on-surface-variant">
                   <MapPin className="mt-1 h-4 w-4 shrink-0 text-secondary" />
@@ -302,6 +344,23 @@ export function PublicRentalContactPage() {
                 </button>
               </form>
             </div>
+
+            <section className="rounded-[32px] border border-secondary/20 bg-white p-5 text-right shadow-xl shadow-secondary/10 sm:p-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-4 py-2 text-sm font-black text-secondary">
+                <CalendarCheck className="h-4 w-4" />
+                بديل آمن بدون دفع
+              </span>
+              <h2 className="mt-4 text-2xl font-black leading-9 text-primary">أرسل طلب معاينة للإدارة</h2>
+              <p className="mt-2 text-sm leading-7 text-on-surface-variant">
+                بدل فتح بيانات التواصل الآن، يمكنك إرسال طلب معاينة للإدارة وسيتواصل معك فريق كمباوند السبحي لمتابعة الطلب.
+              </p>
+            </section>
+
+            <RentalInquiryForm
+              listingId={listing.id}
+              listingTitle={title}
+              intro="هذا الطلب لا يفتح بيانات المالك ولا يبدأ أي دفع. فريق كمباوند السبحي يستلم الطلب ويراجعه للمتابعة."
+            />
 
             {ownerContact && (
               <section className="rounded-[32px] border border-secondary/30 bg-secondary/10 p-5 text-right shadow-xl shadow-secondary/10 sm:p-6">
