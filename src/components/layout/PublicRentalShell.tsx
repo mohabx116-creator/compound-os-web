@@ -4,7 +4,7 @@ import { ROUTES } from '../../lib/constants/routes';
 
 export function PublicRentalShell() {
   return (
-    <div className="min-h-dvh bg-background text-on-background">
+    <div className="rental-luxury min-h-dvh bg-background text-on-background">
       <header className="sticky top-0 z-40 border-b border-outline-variant/50 bg-white/96 backdrop-blur-xl shadow-[0_2px_15px_rgba(3,22,53,0.04)]">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link className="flex items-center gap-3" to={ROUTES.RENTALS}>

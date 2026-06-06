@@ -64,7 +64,7 @@ function isPaymentProviderPending(error: unknown) {
 
 function DetailError({ title, message }: { title: string; message: string }) {
   return (
-    <main className="mx-auto flex min-h-[70dvh] w-full max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
+    <main className="rental-luxury mx-auto flex min-h-[70dvh] w-full max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
       <Building2 className="h-14 w-14 text-secondary" />
       <h1 className="mt-5 text-3xl font-black text-primary">{title}</h1>
       <p className="mt-3 leading-8 text-on-surface-variant">{message}</p>
@@ -136,7 +136,7 @@ export function PublicRentalDetailPage() {
 
   if (listingQuery.isLoading) {
     return (
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="rental-luxury mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="h-[520px] animate-pulse rounded-[32px] bg-white shadow-xl shadow-primary/5" />
       </main>
     );
@@ -179,7 +179,7 @@ export function PublicRentalDetailPage() {
   });
 
   return (
-    <main className="bg-background pb-16">
+    <main className="rental-luxury bg-background pb-16">
       <section className="border-b border-outline-variant/50 bg-white">
         <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
           <Link className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-full px-1 text-sm font-bold text-primary hover:text-secondary" to={ROUTES.RENTALS}>

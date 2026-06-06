@@ -93,7 +93,7 @@ export function PublicRentalReservationPage() {
 
   if (reservationQuery.isLoading) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="rental-luxury mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="h-[420px] animate-pulse rounded-[32px] bg-white shadow-xl shadow-primary/5" />
           <div className="h-[320px] animate-pulse rounded-[32px] bg-white shadow-xl shadow-primary/5" />
@@ -104,7 +104,7 @@ export function PublicRentalReservationPage() {
 
   if (reservationQuery.isError || !reservationQuery.data) {
     return (
-      <main className="mx-auto flex min-h-[70dvh] w-full max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
+      <main className="rental-luxury mx-auto flex min-h-[70dvh] w-full max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
         <CalendarClock className="h-14 w-14 text-secondary" />
         <h1 className="mt-5 text-3xl font-black text-primary">طلب الحجز غير موجود</h1>
         <p className="mt-3 leading-8 text-on-surface-variant">
@@ -124,7 +124,7 @@ export function PublicRentalReservationPage() {
   const isPaymentPending = paymentPendingStatuses.includes(reservation.status);
 
   return (
-    <main className="bg-background pb-16">
+    <main className="rental-luxury bg-background pb-16">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <Link className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-primary shadow-sm shadow-primary/5" to={ROUTES.RENTALS}>
           <Home className="h-4 w-4" />

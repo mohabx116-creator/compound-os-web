@@ -180,7 +180,7 @@ export function PublicRentalsPage() {
   }
 
   return (
-    <main className="pb-16">
+    <main className="rental-luxury pb-16">
       <section className="relative overflow-hidden bg-primary text-white">
         <img alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" src={heroImage} />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/50 via-primary/82 to-primary" />
