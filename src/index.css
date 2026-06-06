@@ -56,13 +56,13 @@
     color: #ffffff;
     background:
       radial-gradient(circle at 20% 10%, rgba(214, 178, 94, 0.13), transparent 30%),
-      radial-gradient(circle at 78% 24%, rgba(16, 119, 96, 0.2), transparent 34%),
-      linear-gradient(180deg, #071614 0%, #081f1b 48%, #06110f 100%) !important;
+      radial-gradient(circle at 78% 24%, rgba(64, 91, 43, 0.28), transparent 34%),
+      linear-gradient(180deg, #111b10 0%, #172414 48%, #08120b 100%) !important;
   }
 
   .rental-luxury .bg-primary,
   .rental-luxury.bg-primary {
-    background-color: #071614 !important;
+    background-color: #111b10 !important;
   }
 
   .rental-luxury .bg-primary\/5,
@@ -74,7 +74,31 @@
   .rental-luxury .bg-primary\/65,
   .rental-luxury .bg-primary\/80,
   .rental-luxury .bg-primary\/82 {
-    background-color: rgba(7, 22, 20, 0.78) !important;
+    background-color: rgba(17, 27, 16, 0.8) !important;
+  }
+
+  .rental-luxury .from-primary,
+  .rental-luxury .from-primary\/50,
+  .rental-luxury .from-primary\/65,
+  .rental-luxury .from-primary\/80,
+  .rental-luxury .from-primary\/82 {
+    --tw-gradient-from: rgba(17, 27, 16, 0.9) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgba(17, 27, 16, 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  .rental-luxury .via-primary,
+  .rental-luxury .via-primary\/25,
+  .rental-luxury .via-primary\/82 {
+    --tw-gradient-to: rgba(17, 27, 16, 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops:
+      var(--tw-gradient-from),
+      rgba(23, 36, 20, 0.82) var(--tw-gradient-via-position),
+      var(--tw-gradient-to) !important;
+  }
+
+  .rental-luxury .to-primary {
+    --tw-gradient-to: rgba(8, 18, 11, 0.96) var(--tw-gradient-to-position) !important;
   }
 
   .rental-luxury .bg-secondary,
