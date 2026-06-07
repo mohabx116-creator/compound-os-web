@@ -12,8 +12,8 @@ export function PublicRentalShell() {
               <Building2 className="h-5 w-5" />
             </span>
             <div className="text-right">
-              <p className="text-sm font-black text-primary">إيجارات كمباوند السبحي</p>
-              <p className="hidden text-xs font-medium text-on-surface-variant sm:block">سوق الإيجارات داخل كمباوند السبحي</p>
+              <p className="text-sm font-black text-primary">إيجارات كمبوند السبحي</p>
+              <p className="hidden text-xs font-medium text-on-surface-variant sm:block">سوق الإيجارات داخل كمبوند السبحي</p>
             </div>
           </Link>
 
@@ -35,7 +35,7 @@ export function PublicRentalShell() {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-8 text-right text-sm text-on-surface-variant sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <p className="font-bold text-primary">سوق إيجارات السبحي</p>
-            <p className="mt-1">منصة عرض وحدات الإيجار داخل كمباوند السبحي مع تحقق دفع آمن عبر الخادم.</p>
+            <p className="mt-1">منصة عرض وحدات الإيجار داخل كمبوند السبحي مع تحقق دفع آمن عبر الخادم.</p>
           </div>
           <div className="flex items-center gap-2 font-bold text-secondary">
             <ShieldCheck className="h-5 w-5" />

@@ -8,11 +8,13 @@ import type {
 } from '../../lib/api/types';
 
 export const publicRentalBrand = {
-  compoundAr: 'كمباوند السبحي',
+  compoundAr: 'كمبوند السبحي',
   compoundEn: 'Sebahi Compound',
-  rentalsTitle: 'إيجارات كمباوند السبحي',
+  rentalsTitle: 'إيجارات كمبوند السبحي',
   marketplaceLabel: 'سوق إيجارات السبحي',
 } as const;
+
+const publicRentalLocation = 'كمبوند السبحي-حدائق العاشر من رمضان';
 
 export const listingTypeLabels: Record<RentalListingType, string> = {
   APARTMENT: 'شقة',
@@ -91,7 +93,9 @@ export function sanitizeSebahiDisplayText(value: string | null | undefined, fall
     .replace(/Black Horse/gi, publicRentalBrand.compoundAr)
     .replace(/black-horse/gi, 'sebahi')
     .replace(/Compound OS Demo/gi, publicRentalBrand.compoundAr)
-    .replace(/New Cairo, Egypt/gi, 'القاهرة الجديدة')
+    .replace(/New Cairo, Egypt/gi, publicRentalLocation)
+    .replace(/التجمع الخامس، القاهرة الجديدة/g, publicRentalLocation)
+    .replace(/القاهرة الجديدة/g, publicRentalLocation)
     .replace(/بلاك هورس/g, publicRentalBrand.compoundAr);
 }
 
@@ -117,5 +121,5 @@ export function getListingCoverImage(listing: RentalListing | null | undefined) 
 }
 
 export function getListingImageAlt(listing: RentalListing, image: RentalListingImage | null | undefined) {
-  return publicRentalText(image?.altText, `صورة ${publicRentalText(listing.title, 'وحدة للإيجار في كمباوند السبحي')}`);
+  return publicRentalText(image?.altText, `صورة ${publicRentalText(listing.title, 'وحدة للإيجار في كمبوند السبحي')}`);
 }

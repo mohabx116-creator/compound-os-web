@@ -13,13 +13,14 @@ import {
   getListingImageAlt,
   listingStatusLabels,
   listingTypeLabels,
-  publicCompoundName,
   publicRentalBrand,
   publicRentalText,
   toNumber,
 } from './rental-format';
 
 const heroImage = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1800';
+const publicRentalCardCompoundName = 'كمبوند السبحي';
+const publicRentalCardLocation = 'كمبوند السبحي-حدائق العاشر من رمضان';
 
 function buildQuery(searchParams: URLSearchParams): RentalListingQuery {
   const minRent = searchParams.get('minRent');
@@ -50,7 +51,7 @@ function ListingImageFallback({ title }: { title: string }) {
           {publicRentalBrand.marketplaceLabel}
         </span>
         <div>
-          <p className="text-sm font-bold text-primary-fixed">كمباوند السبحي</p>
+          <p className="text-sm font-bold text-primary-fixed">{publicRentalCardCompoundName}</p>
           <p className="mt-2 text-2xl font-black leading-9">{title}</p>
         </div>
       </div>
@@ -61,11 +62,8 @@ function ListingImageFallback({ title }: { title: string }) {
 function RentalListingCard({ listing }: { listing: RentalListing }) {
   const coverImage = getListingCoverImage(listing);
   const title = publicRentalText(listing.title);
-  const location = publicRentalText(
-    listing.locationText ?? listing.addressText ?? listing.compound?.address,
-    publicRentalBrand.compoundAr,
-  );
-  const compoundName = publicCompoundName(listing.compound?.name);
+  const location = publicRentalCardLocation;
+  const compoundName = publicRentalCardCompoundName;
   const depositAmount = toNumber(listing.depositAmount);
 
   return (
@@ -223,7 +221,7 @@ export function PublicRentalsPage() {
               {publicRentalBrand.marketplaceLabel}
             </span>
             <h1 className="mt-5 text-4xl font-black leading-[1.25] sm:text-5xl lg:text-6xl">
-              وحدات مختارة للإيجار داخل كمباوند السبحي
+              وحدات مختارة للإيجار داخل كمبوند السبحي
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-9 text-primary-fixed">
               تصفح الوحدات المنشورة، قارن السعر والمساحة والتجهيز، وابدأ طلب التواصل أو الحجز من خلال تدفقات دفع آمنة لا تعتمد على حالة المتصفح.
@@ -327,7 +325,7 @@ export function PublicRentalsPage() {
             <Building2 className="mx-auto h-12 w-12 text-secondary" />
             <h3 className="mt-4 text-2xl font-black text-primary">لا توجد وحدات منشورة حاليا</h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-on-surface-variant">
-              لم نجد وحدات تطابق الفلاتر الحالية داخل كمباوند السبحي. جرب إزالة بعض الفلاتر أو العودة لاحقا بعد نشر وحدات جديدة.
+              لم نجد وحدات تطابق الفلاتر الحالية داخل كمبوند السبحي. جرب إزالة بعض الفلاتر أو العودة لاحقا بعد نشر وحدات جديدة.
             </p>
             <Link className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-bold text-white" to={ROUTES.RENTALS}>
               عرض كل الوحدات

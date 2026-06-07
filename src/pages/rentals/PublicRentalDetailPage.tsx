@@ -66,7 +66,7 @@ function DetailImageFallback({ title }: { title: string }) {
           {publicRentalBrand.rentalsTitle}
         </span>
         <div className="max-w-2xl">
-          <p className="text-sm font-bold text-primary-fixed">كمباوند السبحي</p>
+          <p className="text-sm font-bold text-primary-fixed">كمبوند السبحي</p>
           <p className="mt-2 text-3xl font-black leading-[1.35] sm:text-5xl">{title}</p>
         </div>
       </div>
@@ -360,14 +360,14 @@ export function PublicRentalDetailPage() {
               <RentalInquiryForm
                 listingId={listing.id}
                 listingTitle={title}
-                intro="يمكنك طلب معاينة الوحدة الآن بدون تسجيل دخول وبدون دفع. سيصل الطلب إلى إدارة كمباوند السبحي للمتابعة."
+                intro="يمكنك طلب معاينة الوحدة الآن بدون تسجيل دخول وبدون دفع. سيصل الطلب إلى إدارة كمبوند السبحي للمتابعة."
               />
             ) : (
               <section className="rounded-[28px] border border-secondary/20 bg-secondary/10 p-5 text-right">
                 <CalendarCheck className="h-6 w-6 text-secondary" />
                 <h2 className="mt-3 text-xl font-black text-primary">تريد معاينة الوحدة أولًا؟</h2>
                 <p className="mt-2 text-sm leading-7 text-on-surface-variant">
-                  أرسل طلب معاينة للإدارة بدون دفع أو فتح بيانات المالك. الطلب يصل لفريق كمباوند السبحي لمتابعته من لوحة الإدارة.
+                  أرسل طلب معاينة للإدارة بدون دفع أو فتح بيانات المالك. الطلب يصل لفريق كمبوند السبحي لمتابعته من لوحة الإدارة.
                 </p>
                 <button className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-3 text-sm font-black text-white shadow-lg shadow-secondary/15" type="button" onClick={revealInquiryForm}>
                   طلب معاينة
@@ -419,9 +419,9 @@ export function PublicRentalDetailPage() {
           )}
 
           <section className="rounded-[28px] border border-outline-variant/60 bg-white p-5 text-right shadow-xl shadow-primary/5">
-            <h2 className="text-xl font-black text-primary">الموقع والكمباوند</h2>
+            <h2 className="text-xl font-black text-primary">الموقع والكمبوند</h2>
             <p className="mt-3 text-sm leading-7 text-on-surface-variant">{compoundName}</p>
-            <p className="mt-1 text-sm leading-7 text-on-surface-variant">{publicRentalText(listing.addressText ?? listing.compound?.address, 'القاهرة الجديدة')}</p>
+            <p className="mt-1 text-sm leading-7 text-on-surface-variant">{publicRentalText(listing.addressText ?? listing.compound?.address, 'كمبوند السبحي-حدائق العاشر من رمضان')}</p>
           </section>
         </div>
       </section>
