@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { ScrollToTop } from '../components/layout/ScrollToTop';
 import { MobileAppShell } from '../components/layout/MobileAppShell';
 import { RentalExternalRedirect } from '../components/rentals/RentalExternalRedirect';
 import { ROUTES } from '../lib/constants/routes';
@@ -91,6 +92,7 @@ const placeholderRoutes = routeMeta.filter(
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path={ROUTES.RENTALS} element={<RentalExternalRedirect />} />
         <Route path={ROUTES.RENTAL_DETAILS} element={<RentalExternalRedirect />} />
