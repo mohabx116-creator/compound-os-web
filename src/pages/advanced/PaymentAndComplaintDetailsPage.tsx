@@ -350,9 +350,9 @@ export function ComplaintDetailsPage() {
             </DetailCard>
 
             <DetailCard>
-              <SectionTitle title="بيانات الكمباوند" icon={Info} />
+              <SectionTitle title="بيانات الكمبوند" icon={Info} />
               <div className="mt-3">
-                <InfoRow label="اسم الكمباوند" value={complaint.compound?.name ?? 'غير متاح'} />
+                <InfoRow label="اسم الكمبوند" value={complaint.compound?.name ?? 'غير متاح'} />
               </div>
             </DetailCard>
 

@@ -17,7 +17,7 @@ export function SplashPage() {
         <AppLogo card size="lg" withText />
         <h1 className="mt-10 text-4xl font-bold tracking-tight text-primary">Compound OS</h1>
         <p className="mt-4 max-w-xs text-base leading-8 text-on-surface-variant">
-          إدارة ذكية لحياة أسهل داخل الكمباوند
+          إدارة ذكية لحياة أسهل داخل الكمبوند
         </p>
         <div className="mt-5 flex items-center gap-2 text-sm font-medium text-outline">
           <ShieldCheck className="h-5 w-5" aria-hidden="true" />

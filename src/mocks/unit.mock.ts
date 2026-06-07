@@ -8,5 +8,5 @@ export const mockUnit: Unit = {
   areaSqm: 380,
   status: 'OCCUPIED',
   compoundId: 'comp-101',
-  compoundName: 'كمباوند الياسمين السكني',
+  compoundName: 'كمبوند الياسمين السكني',
 };
