@@ -104,7 +104,7 @@ export function ServicesPage() {
         </section>
 
         <div className="relative h-44 overflow-hidden rounded-[28px] shadow-xl shadow-primary/10">
-          <img alt="" className="h-full w-full object-cover" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=700" />
+          <img alt="" className="h-full w-full object-cover" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=700" loading="lazy" decoding="async" />
           <div className="absolute inset-0 flex items-end bg-gradient-to-t from-primary/85 to-transparent p-5">
             <p className="text-xl font-bold text-white">نحن هنا لخدمتك دائما</p>
           </div>
