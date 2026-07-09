@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAccessToken } from '../auth/auth-token-provider';
 import type { ApiResponse, PaginatedMeta } from './types';
 
-const DEFAULT_API_BASE_URL = 'https://compound-os-api.onrender.com/api/v1';
+const DEFAULT_API_BASE_URL = 'https://compound-os-api-replica.onrender.com/api/v1';
 
 export type ApiClientErrorCode =
   | 'HTTP_ERROR'
